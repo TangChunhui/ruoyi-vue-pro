@@ -3,7 +3,7 @@
 
   <ContentWrap>
     <!-- 搜索栏 -->
-    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px">
+    <el-form class="-mb-15px" :model="queryParams" :inline="true" label-width="68px">
       <el-form-item label="单据时间" prop="timeRange">
         <el-date-picker
           v-model="queryParams.timeRange"
@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { useMessage } from '@/hooks/web/useMessage'
 import { AgriReportApi } from '@/api/erp/agri/report'
 
 defineOptions({ name: 'AgriStockBalanceReport' })
@@ -109,7 +111,7 @@ onMounted(() => {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
   
-  const formatDate = (d) => {
+  const formatDate = (d: Date) => {
     const yyyy = d.getFullYear()
     const mm = String(d.getMonth() + 1).padStart(2, '0')
     const dd = String(d.getDate()).padStart(2, '0')
