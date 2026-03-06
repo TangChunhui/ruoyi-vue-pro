@@ -82,5 +82,9 @@ public class ErpFinanceReceiptDO extends BaseDO {
      * 备注
      */
     private String remark;
+    /**
+     * 记账现场视频存证 URL
+     */
+    private String recordVideoUrl;
 
 }

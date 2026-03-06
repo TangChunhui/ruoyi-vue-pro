@@ -69,6 +69,16 @@ public class ErpProductRespVO {
     @ExcelProperty("最低价格，单位：元")
     private BigDecimal minPrice;
 
+    @Schema(description = "登记证有效期")
+    @ExcelProperty("登记证有效期")
+    private LocalDateTime registrationExpiryDate;
+
+    @Schema(description = "是否高毒限用（0-否，1-是）", example = "0")
+    private Integer isRestricted;
+
+    @Schema(description = "标准亩用量", example = "50.00")
+    private BigDecimal standardDosagePerMu;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * ERP 产品 DO
@@ -82,5 +83,19 @@ public class ErpProductDO extends BaseDO {
      * 最低价格，单位：元
      */
     private BigDecimal minPrice;
+
+    // ========== 农资扩展信息 ==========
+    /**
+     * 登记证有效期
+     */
+    private LocalDateTime registrationExpiryDate;
+    /**
+     * 是否高毒限用（0-否，1-是）
+     */
+    private Integer isRestricted;
+    /**
+     * 标准亩用量
+     */
+    private BigDecimal standardDosagePerMu;
 
 }

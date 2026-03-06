@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * ERP 供应商 DO
@@ -86,5 +87,19 @@ public class ErpSupplierDO extends BaseDO {
      * 开户地址
      */
     private String bankAddress;
+
+    // ========== 农资资质信息 ==========
+    /**
+     * 经营许可证号
+     */
+    private String businessLicenseNo;
+    /**
+     * 资质有效期
+     */
+    private LocalDateTime licenseExpiryDate;
+    /**
+     * 资质附件 URL
+     */
+    private String licenseFileUrl;
 
 }

@@ -87,4 +87,22 @@ public class ErpCustomerDO extends BaseDO {
      */
     private String bankAddress;
 
+    // ========== 农资扩展信息 ==========
+    /**
+     * 种植面积（亩）
+     */
+    private BigDecimal landArea;
+    /**
+     * 主要作物
+     */
+    private String mainCrops;
+    /**
+     * 信用额度，单位：元
+     */
+    private BigDecimal creditLimit;
+    /**
+     * 当前欠款，单位：元
+     */
+    private BigDecimal currentDebt;
+
 }

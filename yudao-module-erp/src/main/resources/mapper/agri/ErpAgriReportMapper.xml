@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iocoder.yudao.module.erp.dal.mysql.agri.ErpAgriReportMapper">
+
+    <!--
+      收发存台账核心逻辑（基于 erp_stock_record 流水表）：
+      - 期初库存：统计区间开始时间之前，每个产品最近一条记录的 total_count
+      - 本期入库：区间内 count > 0 的合计
+      - 本期出库：区间内 count < 0 的绝对值合计
+      - 期末库存 = 期初 + 本期入库 - 本期出库
+    -->
+    <select id="selectStockBalance"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO">
+        SELECT
+            p.id                          AS productId,
+            p.name                        AS productName,
+            p.standard                    AS standard,
+            u.name                        AS unitName,
+            IFNULL(opening.openingStock, 0) AS openingStock,
+            IFNULL(period.inboundStock,  0) AS inboundStock,
+            IFNULL(period.outboundStock, 0) AS outboundStock,
+            (IFNULL(opening.openingStock, 0)
+                + IFNULL(period.inboundStock, 0)
+                - IFNULL(period.outboundStock, 0)) AS closingStock
+        FROM erp_product p
+        LEFT JOIN erp_product_unit u ON u.id = p.unit_id AND u.deleted = 0
+        <!--  期初库存：beginTime 之前最近一条 total_count -->
+        LEFT JOIN (
+            SELECT r1.product_id, r1.total_count AS openingStock
+            FROM erp_stock_record r1
+            INNER JOIN (
+                SELECT product_id, MAX(id) AS max_id
+                FROM erp_stock_record
+                WHERE deleted = 0
+                <if test="req.beginTime != null">
+                    AND create_time &lt; #{req.beginTime}
+                </if>
+                GROUP BY product_id
+            ) r2 ON r1.id = r2.max_id AND r1.deleted = 0
+        ) opening ON opening.product_id = p.id
+        <!-- 本期入库/出库 -->
+        LEFT JOIN (
+            SELECT
+                product_id,
+                SUM(CASE WHEN count &gt; 0 THEN count ELSE 0 END)          AS inboundStock,
+                SUM(CASE WHEN count &lt; 0 THEN ABS(count) ELSE 0 END)     AS outboundStock
+            FROM erp_stock_record
+            WHERE deleted = 0
+            <if test="req.beginTime != null">
+                AND create_time &gt;= #{req.beginTime}
+            </if>
+            <if test="req.endTime != null">
+                AND create_time &lt;= #{req.endTime}
+            </if>
+            <if test="req.warehouseId != null">
+                AND warehouse_id = #{req.warehouseId}
+            </if>
+            GROUP BY product_id
+        ) period ON period.product_id = p.id
+        WHERE p.deleted = 0
+        <if test="req.productId != null">
+            AND p.id = #{req.productId}
+        </if>
+        <!-- 只展示有过库存动态的产品 -->
+        HAVING openingStock > 0 OR inboundStock > 0 OR outboundStock > 0
+        ORDER BY p.id
+    </select>
+
+</mapper>

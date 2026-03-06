@@ -77,6 +77,17 @@ public class ErpSupplierRespVO {
     @ExcelProperty("开户地址")
     private String bankAddress;
 
+    @Schema(description = "经营许可证号", example = "SC112345678")
+    @ExcelProperty("经营许可证号")
+    private String businessLicenseNo;
+
+    @Schema(description = "资质有效期")
+    @ExcelProperty("资质有效期")
+    private LocalDateTime licenseExpiryDate;
+
+    @Schema(description = "资质附件 URL", example = "https://xxx.oss.com/xxx.pdf")
+    private String licenseFileUrl;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

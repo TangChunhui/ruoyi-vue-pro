@@ -118,4 +118,22 @@ public class ErpSaleOrderDO extends BaseDO {
      */
     private BigDecimal returnCount;
 
+    // ========== 农资处方与合规 ==========
+    /**
+     * 用途/防治对象
+     */
+    private String usageIntent;
+    /**
+     * 施用方法
+     */
+    private String usageMethod;
+    /**
+     * 建议用量
+     */
+    private String dosageAdvice;
+    /**
+     * 购买人身份证（高毒限用必填）
+     */
+    private String buyerIdCard;
+
 }
