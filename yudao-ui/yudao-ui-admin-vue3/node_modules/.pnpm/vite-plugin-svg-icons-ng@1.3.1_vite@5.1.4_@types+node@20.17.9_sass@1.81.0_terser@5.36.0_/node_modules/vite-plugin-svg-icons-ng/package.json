@@ -1,0 +1,70 @@
+{
+  "name": "vite-plugin-svg-icons-ng",
+  "version": "1.3.1",
+  "description": "Vite plugin for easily creating an SVG sprite and injecting it for use, with a brand-new version.",
+  "type": "module",
+  "license": "MIT",
+  "author": "yangxu52",
+  "files": [
+    "dist",
+    "client.d.ts"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "engines": {
+    "node": "^18.0.0 || >=20.0.0"
+  },
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "svg",
+    "icon",
+    "svg-icon",
+    "svg-icons",
+    "sprite",
+    "spritemap",
+    "spritesheet",
+    "svg-sprite",
+    "svg-sprites",
+    "symbol",
+    "svg-symbol",
+    "svgo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangxu52/vite-plugin-svg-icons-ng.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/yangxu52/vite-plugin-svg-icons-ng/issues"
+  },
+  "homepage": "https://blog.yangxu52.top/vite-plugin-svg-icons-ng",
+  "dependencies": {
+    "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.0",
+    "node-html-parser": "^7.0.1",
+    "pathe": "^2.0.3",
+    "svgo": "^3.3.2"
+  },
+  "peerDependencies": {
+    "vite": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.13.5"
+  },
+  "scripts": {
+    "dev": "unbuild --stub",
+    "build": "unbuild"
+  }
+}
