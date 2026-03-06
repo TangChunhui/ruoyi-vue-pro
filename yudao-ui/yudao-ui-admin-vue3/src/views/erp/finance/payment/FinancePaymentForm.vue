@@ -76,6 +76,21 @@
             <UploadFile :is-show-tip="false" v-model="formData.fileUrl" :limit="1" />
           </el-form-item>
         </el-col>
+        <el-col :span="24">
+          <el-divider content-position="left">
+            <Icon icon="ep:video-camera" class="mr-1" />记账现场视频存证
+          </el-divider>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="现场录像" prop="recordVideoUrl">
+            <div class="w-full">
+              <CameraRecord v-model="formData.recordVideoUrl" :disabled="disabled" />
+              <div class="text-xs text-gray-400 mt-1">
+                提示：点击“打开摄像头并录制”，将记账当下现场进行录像存证。录制完成后自动上传到云端。
+              </div>
+            </div>
+          </el-form-item>
+        </el-col>
       </el-row>
       <!-- 子表的表单 -->
       <ContentWrap>
@@ -170,6 +185,7 @@ const formData = ref({
   paymentTime: undefined,
   remark: undefined,
   fileUrl: '',
+  recordVideoUrl: '',
   totalPrice: 0,
   discountPrice: 0,
   paymentPrice: 0,
@@ -267,6 +283,7 @@ const resetForm = () => {
     paymentTime: undefined,
     remark: undefined,
     fileUrl: undefined,
+    recordVideoUrl: '',
     totalPrice: 0,
     discountPrice: 0,
     paymentPrice: 0,

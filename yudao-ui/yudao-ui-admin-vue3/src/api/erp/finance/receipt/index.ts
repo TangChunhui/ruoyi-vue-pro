@@ -9,6 +9,7 @@ export interface FinanceReceiptVO {
   totalPrice: number // 合计金额，单位：元
   status: number // 状态
   remark: string // 备注
+  recordVideoUrl: string // 记账现场视频存证 URL
 }
 
 // ERP 收款单 API
