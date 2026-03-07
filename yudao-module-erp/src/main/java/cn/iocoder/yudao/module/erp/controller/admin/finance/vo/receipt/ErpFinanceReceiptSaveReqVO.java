@@ -39,6 +39,9 @@ public class ErpFinanceReceiptSaveReqVO {
     @Schema(description = "备注", example = "你猜")
     private String remark;
 
+    @Schema(description = "记账现场视频存证 URL", example = "https://xxx.oss.com/video.webm")
+    private String recordVideoUrl;
+
     @Schema(description = "收款项列表", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty(message = "收款项列表不能为空")
     @Valid

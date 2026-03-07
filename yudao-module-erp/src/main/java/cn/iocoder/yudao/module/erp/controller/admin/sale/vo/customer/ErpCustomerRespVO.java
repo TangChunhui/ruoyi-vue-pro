@@ -74,6 +74,19 @@ public class ErpCustomerRespVO {
     @ExcelProperty("开户地址")
     private String bankAddress;
 
+    // ========== 农资扩展信息 ==========
+    @Schema(description = "种植面积（亩）", example = "100.00")
+    private java.math.BigDecimal landArea;
+
+    @Schema(description = "主要种植作物", example = "水稻、玉米")
+    private String mainCrops;
+
+    @Schema(description = "信用额度，单位：元", example = "5000.00")
+    private java.math.BigDecimal creditLimit;
+
+    @Schema(description = "当前欠款，单位：元", example = "0.00")
+    private java.math.BigDecimal currentDebt;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

@@ -55,4 +55,14 @@ public class ProductSaveReqVO {
     @Schema(description = "最低价格，单位：元", example = "161.87")
     private BigDecimal minPrice;
 
+    // ========== 农资扩展信息 ==========
+    @Schema(description = "农药登记证有效期")
+    private java.time.LocalDateTime registrationExpiryDate;
+
+    @Schema(description = "是否高毒限用（0-否，1-是）", example = "0")
+    private Integer isRestricted;
+
+    @Schema(description = "标准亩用量", example = "50.00")
+    private BigDecimal standardDosagePerMu;
+
 }

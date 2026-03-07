@@ -11,6 +11,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Schema(description = "管理后台 - ERP 供应商新增/修改 Request VO")
 @Data
@@ -67,5 +68,15 @@ public class ErpSupplierSaveReqVO {
 
     @Schema(description = "开户地址", example = "兴业银行浦东支行")
     private String bankAddress;
+
+    // ========== 农资资质信息 ==========
+    @Schema(description = "经营许可证号", example = "SC112345678")
+    private String businessLicenseNo;
+
+    @Schema(description = "资质有效期")
+    private LocalDateTime licenseExpiryDate;
+
+    @Schema(description = "资质附件 URL", example = "https://xxx.oss.com/xxx.pdf")
+    private String licenseFileUrl;
 
 }

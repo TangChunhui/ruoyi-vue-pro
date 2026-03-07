@@ -41,6 +41,19 @@ public class ErpSaleOrderSaveReqVO {
     @Schema(description = "备注", example = "你猜")
     private String remark;
 
+    // ========== 农资处方与合规 ==========
+    @Schema(description = "用途/防治对象", example = "防治稻瘟病")
+    private String usageIntent;
+
+    @Schema(description = "施用方法", example = "喷雾")
+    private String usageMethod;
+
+    @Schema(description = "建议用量", example = "每亩50ml兑水30公斤")
+    private String dosageAdvice;
+
+    @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
+    private String buyerIdCard;
+
     @Schema(description = "订单清单列表")
     private List<Item> items;
 

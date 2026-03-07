@@ -54,6 +54,9 @@ public class ErpFinanceReceiptRespVO {
     @Schema(description = "备注", example = "你猜")
     private String remark;
 
+    @Schema(description = "记账现场视频存证 URL", example = "https://xxx.oss.com/video.webm")
+    private String recordVideoUrl;
+
     @Schema(description = "创建人", example = "芋道")
     private String creator;
     @Schema(description = "创建人名称", example = "芋道")

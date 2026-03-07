@@ -100,6 +100,19 @@ public class ErpSaleOrderRespVO {
     @Schema(description = "销售退货数量", requiredMode = Schema.RequiredMode.REQUIRED, example = "100.00")
     private BigDecimal returnCount;
 
+    // ========== 农资处方与合规 ==========
+    @Schema(description = "用途/防治对象", example = "防治稻瘟病")
+    private String usageIntent;
+
+    @Schema(description = "施用方法", example = "喷雾")
+    private String usageMethod;
+
+    @Schema(description = "建议用量", example = "每亩50ml兑水30公斤")
+    private String dosageAdvice;
+
+    @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
+    private String buyerIdCard;
+
     @Data
     public static class Item {
 
