@@ -86,6 +86,10 @@ public class ErpProductDO extends BaseDO {
 
     // ========== 农资扩展信息 ==========
     /**
+     * 登记证号
+     */
+    private String registrationNo;
+    /**
      * 登记证有效期
      */
     private LocalDateTime registrationExpiryDate;

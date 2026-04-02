@@ -44,6 +44,11 @@
           end-placeholder="结束日期"
           :default-time="[new Date('1 00:00:00'), new Date('1 23:59:59')]"
           class="!w-240px"
+          :shortcuts="[
+            { text: '今日', value: [new Date().setHours(0, 0, 0, 0), new Date().setHours(23, 59, 59, 999)] },
+            { text: '昨日', value: [new Date(Date.now() - 86400000).setHours(0, 0, 0, 0), new Date(Date.now() - 86400000).setHours(23, 59, 59, 999)] },
+            { text: '最近7日', value: [new Date(Date.now() - 604800000).setHours(0, 0, 0, 0), new Date(Date.now() - 604800000).setHours(23, 59, 59, 999)] }
+          ]"
         />
       </el-form-item>
       <el-form-item label="客户" prop="customerId">
@@ -165,7 +170,23 @@
     >
       <el-table-column width="30" label="选择" type="selection" />
       <el-table-column min-width="180" label="订单单号" align="center" prop="no" />
-      <el-table-column label="产品信息" align="center" prop="productNames" min-width="200" />
+      <el-table-column label="合规" align="center" width="80">
+        <template #default="scope">
+          <el-tooltip v-if="scope.row.buyerIdCard" :content="'购药人: ' + scope.row.buyerIdCard">
+            <el-tag type="success" size="small"><Icon icon="ep:reading" /> 已登记</el-tag>
+          </el-tooltip>
+          <el-tag v-else type="info" size="small">免登记</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="产品信息" align="left" prop="productNames" min-width="250">
+        <template #default="scope">
+          <div v-for="item in scope.row.items" :key="item.id" class="text-12px mb-2px">
+            <el-tag size="small" type="info" class="mr-4px">{{ item.productName }}</el-tag>
+            <span v-if="item.batchNo" class="text-gray-400">批次: {{ item.batchNo }}</span>
+            <span class="ml-4px">x{{ erpCountTableColumnFormatter(null, null, item.count) }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="客户" align="center" prop="customerName" />
       <el-table-column
         label="订单时间"
@@ -251,6 +272,14 @@
             v-else
           >
             反审批
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            @click="handlePrint(scope.row.id)"
+            v-hasPermi="['erp:sale-order:query']"
+          >
+            打印
           </el-button>
           <el-button
             link
@@ -402,6 +431,82 @@ onMounted(async () => {
   customerList.value = await CustomerApi.getCustomerSimpleList()
   userList.value = await UserApi.getSimpleUserList()
 })
-// TODO 芋艿：可优化功能：列表界面，支持导入
-// TODO 芋艿：可优化功能：详情界面，支持打印
+
+/** 打印销售单 (农资合规版) */
+const handlePrint = async (id: number) => {
+  const data = await SaleOrderApi.getSaleOrder(id)
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+
+  // 1. 构建打印内容
+  let itemsHtml = ''
+  data.items.forEach((item, index) => {
+    itemsHtml += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.productName}</td>
+        <td>${item.productUnitName || ''}</td>
+        <td>${item.count}</td>
+        <td>¥${item.productPrice.toFixed(2)}</td>
+        <td>¥${item.totalPrice.toFixed(2)}</td>
+      </tr>
+    `
+  })
+
+  const htmlContent = `
+    <html>
+      <head>
+        <title>农资产品销售送货单 - ${data.no}</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; }
+          .header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 20px; font-size: 14px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+          th { background: #f5f5f5; }
+          .footer { margin-top: 30px; border-top: 1px dashed #333; padding-top: 15px; font-size: 12px; }
+          .highlight { font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>农业生产资料销售送货单 (合规凭证)</h2>
+          <div>单号: ${data.no} | 日期: ${dateFormatter2(null, null, data.orderTime)}</div>
+        </div>
+        <div class="info-grid">
+          <div>客户名称: <span class="highlight">${data.customerName || '散客'}</span></div>
+          <div>购药人证件: <span class="highlight">${data.buyerIdCard || '非受控药/未登记'}</span></div>
+          <div>用途建议: ${data.usageIntent || '--'}</div>
+          <div>用法建议: ${data.usageMethod || '--'}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>序号</th><th>产品名称</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHtml}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" style="text-align:right">合计:</td>
+              <td colspan="2" class="highlight">¥${data.totalPrice.toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="footer">
+          注：请严格按照使用说明书或农技人员指导使用。农药登记证有效期内销售。
+          <br/>
+          打印来源: 农资ERP管理系统 | 打印时间: ${new Date().toLocaleString()}
+        </div>
+      </body>
+    </html>
+  `
+  // 2. 写入并打印
+  printWindow.document.write(htmlContent)
+  printWindow.document.close()
+  setTimeout(() => {
+    printWindow.print()
+    printWindow.close()
+  }, 500)
+}
 </script>

@@ -31,6 +31,12 @@
           class="!w-240px"
         />
       </el-form-item>
+      <el-form-item label="高毒限用" prop="isRestricted">
+        <el-select v-model="queryParams.isRestricted" clearable placeholder="请选择" class="!w-240px">
+          <el-option label="是" :value="1" />
+          <el-option label="否" :value="0" />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -59,7 +65,15 @@
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
       <el-table-column label="条码" align="center" prop="barCode" />
-      <el-table-column label="名称" align="center" prop="name" />
+      <el-table-column label="名称" align="center" prop="name" min-width="150" />
+      <el-table-column label="登记证号" align="center" prop="registrationNo" width="120" />
+      <el-table-column label="高毒限用" align="center" prop="isRestricted" width="100">
+        <template #default="scope">
+          <el-tag :type="scope.row.isRestricted ? 'danger' : 'success'">
+            {{ scope.row.isRestricted ? '是' : '否' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="规格" align="center" prop="standard" />
       <el-table-column label="分类" align="center" prop="categoryName" />
       <el-table-column label="单位" align="center" prop="unitName" />
@@ -150,7 +164,8 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
-  categoryId: undefined
+  categoryId: undefined,
+  isRestricted: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中

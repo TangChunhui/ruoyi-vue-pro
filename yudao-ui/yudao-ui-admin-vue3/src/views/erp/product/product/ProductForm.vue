@@ -116,9 +116,13 @@
             />
           </el-form-item>
         </el-col>
-        </el-col>
         <el-col :span="24">
           <el-divider content-position="left">农资扩展信息</el-divider>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="农药登记证号" prop="registrationNo">
+            <el-input v-model="formData.registrationNo" placeholder="请输入农药登记证号" />
+          </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="登记证有效期" prop="registrationExpiryDate">
@@ -193,6 +197,7 @@ const formData = ref({
   salePrice: undefined,
   minPrice: undefined,
   registrationExpiryDate: undefined,
+  registrationNo: undefined,
   isRestricted: false,
   standardDosagePerMu: undefined
 })
@@ -271,6 +276,7 @@ const resetForm = () => {
     salePrice: undefined,
     minPrice: undefined,
     registrationExpiryDate: undefined,
+    registrationNo: undefined,
     isRestricted: false,
     standardDosagePerMu: undefined
   }
