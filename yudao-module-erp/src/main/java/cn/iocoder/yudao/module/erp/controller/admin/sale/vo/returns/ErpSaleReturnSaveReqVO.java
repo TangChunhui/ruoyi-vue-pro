@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Schema(description = "管理后台 - ERP 销售退货新增/修改 Request VO")
+@Schema(description = "管理后台 - ERP 销售退货新增/修改 Request VO (农资进阶版)")
 @Data
 public class ErpSaleReturnSaveReqVO {
 
@@ -29,7 +29,7 @@ public class ErpSaleReturnSaveReqVO {
     @NotNull(message = "销售订单编号不能为空")
     private Long orderId;
 
-    @Schema(description = "优惠率，百分比", requiredMode = Schema.RequiredMode.REQUIRED, example = "99.88")
+    @Schema(description = "优惠率，百分比", example = "99.88")
     private BigDecimal discountPercent;
 
     @Schema(description = "其它金额，单位：元", example = "7127")
@@ -75,6 +75,13 @@ public class ErpSaleReturnSaveReqVO {
 
         @Schema(description = "税率，百分比", example = "99.88")
         private BigDecimal taxPercent;
+
+        @Schema(description = "生产批次号 (农资溯源)", example = "P20231201")
+        private String batchNo;
+        @Schema(description = "生产日期")
+        private LocalDateTime productionDate;
+        @Schema(description = "保质截止日期")
+        private LocalDateTime expiryDate;
 
         @Schema(description = "备注", example = "随便")
         private String remark;

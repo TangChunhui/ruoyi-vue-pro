@@ -141,6 +141,13 @@ public class ErpSaleOrderRespVO {
         @Schema(description = "备注", example = "随便")
         private String remark;
 
+        @Schema(description = "生产批次号", example = "B240315")
+        private String batchNo;
+        @Schema(description = "生产日期")
+        private LocalDateTime productionDate;
+        @Schema(description = "有效期至")
+        private LocalDateTime expiryDate;
+
         // ========== 销售出库 ==========
 
         @Schema(description = "销售出库数量", requiredMode = Schema.RequiredMode.REQUIRED, example = "100.00")
