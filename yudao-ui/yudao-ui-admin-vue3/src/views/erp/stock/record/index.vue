@@ -67,6 +67,14 @@
           class="!w-240px"
         />
       </el-form-item>
+      <el-form-item label="生产批次" prop="batchNo">
+        <el-input
+          v-model="queryParams.batchNo"
+          clearable
+          placeholder="请输入生产批次"
+          class="!w-240px"
+        />
+      </el-form-item>
       <el-form-item label="创建时间" prop="createTime">
         <el-date-picker
           v-model="queryParams.createTime"
@@ -115,6 +123,9 @@
         </template>
       </el-table-column>
       <el-table-column label="出入库单号" align="center" prop="bizNo" width="200" />
+      <el-table-column label="生产批次" align="center" prop="batchNo" width="150px" />
+      <el-table-column label="生产日期" align="center" prop="productionDate" :formatter="dateFormatter2" width="120px" />
+      <el-table-column label="有效期至" align="center" prop="expiryDate" :formatter="dateFormatter2" width="120px" />
       <el-table-column
         label="出入库日期"
         align="center"
@@ -148,7 +159,7 @@
 
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
+import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { StockRecordApi, StockRecordVO } from '@/api/erp/stock/record'
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
@@ -171,6 +182,7 @@ const queryParams = reactive({
   warehouseId: undefined,
   bizType: undefined,
   bizNo: undefined,
+  batchNo: undefined,
   createTime: []
 })
 const queryFormRef = ref() // 搜索的表单
@@ -206,19 +218,6 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await StockRecordApi.deleteStockRecord(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
 }
 
 /** 导出按钮操作 */

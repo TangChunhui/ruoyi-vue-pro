@@ -2,19 +2,22 @@ package cn.iocoder.yudao.module.erp.service.stock.bo;
 
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
- * 库存明细的创建 Request BO
+ * 库存明细的创建 Request BO (进阶版：支持批次溯源)
  *
  * @author 芋道源码
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ErpStockRecordCreateReqBO {
 
     /**
@@ -55,5 +58,18 @@ public class ErpStockRecordCreateReqBO {
      */
     @NotNull(message = "业务单号不能为空")
     private String bizNo;
+
+    /**
+     * 生产批次号 (农资溯源标识)
+     */
+    private String batchNo;
+    /**
+     * 生产日期
+     */
+    private LocalDateTime productionDate;
+    /**
+     * 有效截止日期
+     */
+    private LocalDateTime expiryDate;
 
 }

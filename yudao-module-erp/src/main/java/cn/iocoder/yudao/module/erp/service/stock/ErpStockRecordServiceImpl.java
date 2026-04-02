@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 
 /**
- * ERP 产品库存明细 Service 实现类
+ * ERP 产品库存明细 Service 实现类 (进阶版：全生命周期溯源)
  *
  * @author 芋道源码
  */
@@ -41,10 +41,17 @@ public class ErpStockRecordServiceImpl implements ErpStockRecordService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createStockRecord(ErpStockRecordCreateReqBO createReqBO) {
-        // 1. 更新库存
+        // 1. 进阶更新库存：支持批次追踪
         BigDecimal totalCount = stockService.updateStockCountIncrement(
-                createReqBO.getProductId(), createReqBO.getWarehouseId(), createReqBO.getCount());
-        // 2. 创建库存明细
+                createReqBO.getProductId(),
+                createReqBO.getWarehouseId(),
+                createReqBO.getCount(),
+                createReqBO.getBatchNo(), // 注入批次号
+                createReqBO.getProductionDate(),
+                createReqBO.getExpiryDate()
+        );
+
+        // 2. 创建库存明细记录 (带溯源标识)
         ErpStockRecordDO stockRecord = BeanUtils.toBean(createReqBO, ErpStockRecordDO.class)
                 .setTotalCount(totalCount);
         stockRecordMapper.insert(stockRecord);

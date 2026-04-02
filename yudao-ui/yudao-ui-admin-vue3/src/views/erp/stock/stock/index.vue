@@ -43,6 +43,14 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="生产批次" prop="batchNo">
+        <el-input
+          v-model="queryParams.batchNo"
+          clearable
+          placeholder="请输入生产批次"
+          class="!w-240px"
+        />
+      </el-form-item>
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
         <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
@@ -73,6 +81,9 @@
       <el-table-column label="产品名称" align="center" prop="productName" />
       <el-table-column label="产品单位" align="center" prop="unitName" />
       <el-table-column label="产品分类" align="center" prop="categoryName" />
+      <el-table-column label="生产批次" align="center" prop="batchNo" />
+      <el-table-column label="生产日期" align="center" prop="productionDate" :formatter="dateFormatter2" />
+      <el-table-column label="有效期至" align="center" prop="expiryDate" :formatter="dateFormatter2" />
       <el-table-column
         label="库存量"
         align="center"
@@ -97,12 +108,12 @@ import { StockApi, StockVO } from '@/api/erp/stock/stock'
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
 import { erpCountTableColumnFormatter } from '@/utils'
+import { dateFormatter2 } from '@/utils/formatTime'
 
 /** ERP 产品库存列表 */
 defineOptions({ name: 'ErpStock' })
 
 const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
 
 const loading = ref(true) // 列表的加载中
 const list = ref<StockVO[]>([]) // 列表的数据
@@ -111,7 +122,8 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   productId: undefined,
-  warehouseId: undefined
+  warehouseId: undefined,
+  batchNo: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
@@ -146,19 +158,6 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
-}
-
-/** 删除按钮操作 */
-const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await StockApi.deleteStock(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
 }
 
 /** 导出按钮操作 */

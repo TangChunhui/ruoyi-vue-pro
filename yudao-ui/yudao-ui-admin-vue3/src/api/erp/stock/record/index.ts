@@ -2,15 +2,18 @@ import request from '@/config/axios'
 
 // ERP 产品库存明细 VO
 export interface StockRecordVO {
-  id: number // 编号
-  productId: number // 产品编号
-  warehouseId: number // 仓库编号
-  count: number // 出入库数量
-  totalCount: number // 总库存量
-  bizType: number // 业务类型
-  bizId: number // 业务编号
-  bizItemId: number // 业务项编号
-  bizNo: string // 业务单号
+  id: number
+  productId: number
+  warehouseId: number
+  batchNo: string
+  productionDate: number
+  expiryDate: number
+  count: number
+  totalCount: number
+  bizType: number
+  bizId: number
+  bizItemId: number
+  bizNo: string
 }
 
 // ERP 产品库存明细 API

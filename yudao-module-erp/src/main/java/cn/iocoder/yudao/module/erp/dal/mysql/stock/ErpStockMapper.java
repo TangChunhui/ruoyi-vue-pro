@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ERP 产品库存 Mapper
+ * ERP 产品库存 Mapper (农资进阶版)
  *
  * @author 芋道源码
  */
@@ -30,9 +30,37 @@ public interface ErpStockMapper extends BaseMapperX<ErpStockDO> {
                 .orderByDesc(ErpStockDO::getId));
     }
 
+    /**
+     * 按产品 + 仓库查询 (兼容旧逻辑，优先返回即将过期的批次)
+     */
     default ErpStockDO selectByProductIdAndWarehouseId(Long productId, Long warehouseId) {
-        return selectOne(ErpStockDO::getProductId, productId,
-                ErpStockDO::getWarehouseId, warehouseId);
+        return selectOne(new LambdaQueryWrapperX<ErpStockDO>()
+                .eq(ErpStockDO::getProductId, productId)
+                .eq(ErpStockDO::getWarehouseId, warehouseId)
+                .orderByAsc(ErpStockDO::getExpiryDate)
+                .last("LIMIT 1"));
+    }
+
+    /**
+     * 按产品 + 仓库查询全部批次列表 (溯源核心：先进先出排序)
+     */
+    default List<ErpStockDO> selectListByProductIdAndWarehouseId(Long productId, Long warehouseId) {
+        return selectList(new LambdaQueryWrapperX<ErpStockDO>()
+                .eq(ErpStockDO::getProductId, productId)
+                .eq(ErpStockDO::getWarehouseId, warehouseId)
+                .gt(ErpStockDO::getCount, 0)
+                .orderByAsc(ErpStockDO::getExpiryDate)
+                .orderByAsc(ErpStockDO::getBatchNo));
+    }
+
+    /**
+     * 精准按 产品 + 仓库 + 批次 查询 (溯源核心)
+     */
+    default ErpStockDO selectByProductIdAndWarehouseIdAndBatchNo(Long productId, Long warehouseId, String batchNo) {
+        return selectOne(new LambdaQueryWrapperX<ErpStockDO>()
+                .eq(ErpStockDO::getProductId, productId)
+                .eq(ErpStockDO::getWarehouseId, warehouseId)
+                .eq(ErpStockDO::getBatchNo, batchNo));
     }
 
     default int updateCountIncrement(Long id, BigDecimal count, boolean negativeEnable) {
@@ -50,11 +78,9 @@ public interface ErpStockMapper extends BaseMapperX<ErpStockDO> {
     }
 
     default BigDecimal selectSumByProductId(Long productId) {
-        // SQL sum 查询
         List<Map<String, Object>> result = selectMaps(new QueryWrapper<ErpStockDO>()
                 .select("SUM(count) AS sum_count")
                 .eq("product_id", productId));
-        // 获得数量
         if (CollUtil.isEmpty(result)) {
             return BigDecimal.ZERO;
         }

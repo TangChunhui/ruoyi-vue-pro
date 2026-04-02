@@ -8,14 +8,15 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
- * ERP 产品库存 DO
+ * ERP 产品库存 DO (已升级：农资批次溯源版)
  *
  * @author 芋道源码
  */
 @TableName("erp_stock")
-@KeySequence("erp_stock_seq") // 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
+@KeySequence("erp_stock_seq")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -37,13 +38,24 @@ public class ErpStockDO extends BaseDO {
     private Long productId;
     /**
      * 仓库编号
-     *
-     * 关联 {@link ErpWarehouseDO#getId()}
      */
     private Long warehouseId;
     /**
      * 库存数量
      */
     private BigDecimal count;
+
+    /**
+     * 生产批次号 (重要：农资溯源唯一标识)
+     */
+    private String batchNo;
+    /**
+     * 生产日期
+     */
+    private LocalDateTime productionDate;
+    /**
+     * 有效截止日期 (临期提醒依据)
+     */
+    private LocalDateTime expiryDate;
 
 }
