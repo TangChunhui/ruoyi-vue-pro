@@ -16,32 +16,47 @@
             p.name                        AS productName,
             p.standard                    AS standard,
             u.name                        AS unitName,
+            combined.batchNo             AS batchNo,
+            combined.productionDate      AS productionDate,
+            combined.expiryDate          AS expiryDate,
             IFNULL(opening.openingStock, 0) AS openingStock,
             IFNULL(period.inboundStock,  0) AS inboundStock,
             IFNULL(period.outboundStock, 0) AS outboundStock,
             (IFNULL(opening.openingStock, 0)
                 + IFNULL(period.inboundStock, 0)
-                - IFNULL(period.outboundStock, 0)) AS closingStock
+                - IFNULL(period.outboundStock, 0)) AS closingStock,
+            p.is_restricted               AS isRestricted,
+            p.registration_expiry_date    AS registrationExpiryDate
         FROM erp_product p
+        INNER JOIN (
+            SELECT DISTINCT product_id, batch_no AS batchNo, production_date AS productionDate, expiry_date AS expiryDate
+            FROM erp_stock_record
+            WHERE deleted = 0
+            <if test="req.warehouseId != null">
+                AND warehouse_id = #{req.warehouseId}
+            </if>
+            <if test="req.batchNo != null and req.batchNo != ''">
+                AND batch_no LIKE CONCAT('%', #{req.batchNo}, '%')
+            </if>
+        ) combined ON combined.product_id = p.id
         LEFT JOIN erp_product_unit u ON u.id = p.unit_id AND u.deleted = 0
-        <!--  期初库存：beginTime 之前最近一条 total_count -->
         LEFT JOIN (
-            SELECT r1.product_id, r1.total_count AS openingStock
+            SELECT r1.product_id, r1.batch_no, r1.total_count AS openingStock
             FROM erp_stock_record r1
             INNER JOIN (
-                SELECT product_id, MAX(id) AS max_id
+                SELECT product_id, batch_no, MAX(id) AS max_id
                 FROM erp_stock_record
                 WHERE deleted = 0
                 <if test="req.beginTime != null">
                     AND create_time &lt; #{req.beginTime}
                 </if>
-                GROUP BY product_id
+                GROUP BY product_id, batch_no
             ) r2 ON r1.id = r2.max_id AND r1.deleted = 0
-        ) opening ON opening.product_id = p.id
-        <!-- 本期入库/出库 -->
+        ) opening ON opening.product_id = combined.product_id AND IFNULL(opening.batch_no, '') = IFNULL(combined.batchNo, '')
         LEFT JOIN (
             SELECT
                 product_id,
+                batch_no,
                 SUM(CASE WHEN count &gt; 0 THEN count ELSE 0 END)          AS inboundStock,
                 SUM(CASE WHEN count &lt; 0 THEN ABS(count) ELSE 0 END)     AS outboundStock
             FROM erp_stock_record
@@ -55,15 +70,199 @@
             <if test="req.warehouseId != null">
                 AND warehouse_id = #{req.warehouseId}
             </if>
-            GROUP BY product_id
-        ) period ON period.product_id = p.id
+            GROUP BY product_id, batch_no
+        ) period ON period.product_id = combined.product_id AND IFNULL(period.batch_no, '') = IFNULL(combined.batchNo, '')
         WHERE p.deleted = 0
         <if test="req.productId != null">
             AND p.id = #{req.productId}
         </if>
-        <!-- 只展示有过库存动态的产品 -->
-        HAVING openingStock > 0 OR inboundStock > 0 OR outboundStock > 0
-        ORDER BY p.id
+        AND (opening.openingStock > 0 OR period.inboundStock > 0 OR period.outboundStock > 0)
+        ORDER BY p.id, combined.batchNo
+    </select>
+
+    <select id="selectExpiringProductCount" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM erp_product
+        WHERE deleted = 0
+          AND registration_expiry_date IS NOT NULL
+          AND registration_expiry_date BETWEEN #{now} AND #{future}
+    </select>
+
+    <select id="selectExpiredSupplierCount" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM erp_supplier
+        WHERE deleted = 0
+          AND license_expiry_date IS NOT NULL
+          AND license_expiry_date &lt; #{now}
+    </select>
+
+    <select id="selectWarningCustomerCount" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM erp_customer
+        WHERE deleted = 0
+          AND credit_limit > 0
+          AND (current_debt / credit_limit) >= 0.8
+    </select>
+
+    <select id="selectMonthlyRestrictedSaleCount" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT o.id)
+        FROM erp_sale_order o
+        INNER JOIN erp_sale_order_item i ON o.id = i.order_id AND i.deleted = 0
+        INNER JOIN erp_product p ON i.product_id = p.id AND p.deleted = 0
+        WHERE o.deleted = 0
+          AND p.is_restricted = 1
+          AND o.create_time >= #{startOfMonth}
+    </select>
+
+    <select id="selectRestrictedSaleList"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO">
+        SELECT
+            o.no AS orderNo,
+            o.order_time AS orderTime,
+            p.name AS productName,
+            p.registration_no AS registrationNo,
+            p.standard AS standard,
+            i.count AS count,
+            u.name AS unitName,
+            i.batch_no AS batchNo,
+            i.production_date AS productionDate,
+            i.expiry_date AS expiryDate,
+            c.name AS customerName,
+            o.buyer_id_card AS buyerIdCard,
+            o.usage_intent AS usageIntent,
+            o.dosage_advice AS dosageAdvice
+        FROM erp_sale_order o
+        INNER JOIN erp_sale_order_item i ON o.id = i.order_id AND i.deleted = 0
+        INNER JOIN erp_product p ON i.product_id = p.id AND p.deleted = 0
+        LEFT JOIN erp_customer c ON o.customer_id = c.id AND c.deleted = 0
+        LEFT JOIN erp_product_unit u ON i.product_unit_id = u.id AND u.deleted = 0
+        WHERE o.deleted = 0
+          AND p.is_restricted = 1
+        <if test="req.beginTime != null">
+            AND o.order_time &gt;= #{req.beginTime}
+        </if>
+        <if test="req.endTime != null">
+            AND o.order_time &lt;= #{req.endTime}
+        </if>
+        <if test="req.productId != null">
+            AND p.id = #{req.productId}
+        </if>
+        ORDER BY o.order_time DESC
+    </select>
+
+    <select id="selectSalesDetailList"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO">
+        SELECT
+            o.no AS orderNo,
+            o.order_time AS orderTime,
+            p.name AS productName,
+            p.registration_no AS registrationNo,
+            p.standard AS standard,
+            i.count AS count,
+            u.name AS unitName,
+            i.batch_no AS batchNo,
+            i.production_date AS productionDate,
+            i.expiry_date AS expiryDate,
+            c.name AS customerName,
+            o.buyer_id_card AS buyerIdCard,
+            o.usage_intent AS usageIntent,
+            o.dosage_advice AS dosageAdvice
+        FROM erp_sale_order o
+        INNER JOIN erp_sale_order_item i ON o.id = i.order_id AND i.deleted = 0
+        INNER JOIN erp_product p ON i.product_id = p.id AND p.deleted = 0
+        LEFT JOIN erp_customer c ON o.customer_id = c.id AND c.deleted = 0
+        LEFT JOIN erp_product_unit u ON i.product_unit_id = u.id AND u.deleted = 0
+        WHERE o.deleted = 0
+        <if test="req.beginTime != null">
+            AND o.order_time &gt;= #{req.beginTime}
+        </if>
+        <if test="req.endTime != null">
+            AND o.order_time &lt;= #{req.endTime}
+        </if>
+        <if test="req.productId != null">
+            AND p.id = #{req.productId}
+        </if>
+        <if test="req.customerId != null">
+            AND o.customer_id = #{req.customerId}
+        </if>
+        <if test="req.batchNo != null and req.batchNo != ''">
+            AND i.batch_no LIKE CONCAT('%', #{req.batchNo}, '%')
+        </if>
+        ORDER BY o.order_time DESC
+    </select>
+
+    <select id="selectExpiringStockList"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO">
+        SELECT
+            p.id                          AS productId,
+            p.name                        AS productName,
+            p.standard                    AS standard,
+            u.name                        AS unitName,
+            s.batch_no                   AS batchNo,
+            s.production_date            AS productionDate,
+            s.expiry_date                AS expiryDate,
+            s.count                      AS closingStock,
+            p.is_restricted               AS isRestricted
+        FROM erp_stock s
+        INNER JOIN erp_product p ON s.product_id = p.id AND p.deleted = 0
+        LEFT JOIN erp_product_unit u ON u.id = p.unit_id AND u.deleted = 0
+        WHERE s.deleted = 0
+          AND s.count > 0
+          AND s.expiry_date IS NOT NULL
+          AND s.expiry_date &lt;= DATE_ADD(NOW(), INTERVAL #{days} DAY)
+        ORDER BY s.expiry_date ASC
+    </select>
+
+    <select id="selectTotalStockValue" resultType="java.math.BigDecimal">
+        SELECT SUM(s.count * p.sale_price)
+        FROM erp_stock s
+        INNER JOIN erp_product p ON s.product_id = p.id AND p.deleted = 0
+        WHERE s.deleted = 0
+    </select>
+
+    <select id="selectSalesAmount" resultType="java.math.BigDecimal">
+        SELECT SUM(total_price)
+        FROM erp_sale_order
+        WHERE deleted = 0
+          AND status = 20
+          <if test="beginTime != null">
+              AND order_time &gt;= #{beginTime}
+          </if>
+          <if test="endTime != null">
+              AND order_time &lt;= #{endTime}
+          </if>
+    </select>
+
+    <!-- 农资财务看板：今日收入 -->
+    <select id="selectReceiptAmount" resultType="java.math.BigDecimal">
+        SELECT SUM(total_price) FROM erp_finance_receipt
+        WHERE deleted = 0 AND status = 20
+        AND order_time BETWEEN #{beginTime} AND #{endTime}
+    </select>
+
+    <!-- 农资财务看板：今日支出 -->
+    <select id="selectPaymentAmount" resultType="java.math.BigDecimal">
+        SELECT SUM(total_price) FROM erp_finance_payment
+        WHERE deleted = 0 AND status = 20
+        AND order_time BETWEEN #{beginTime} AND #{endTime}
+    </select>
+
+    <!-- 农资财务看板：当前总应收（农户欠款） -->
+    <select id="selectTotalReceivableAmount" resultType="java.math.BigDecimal">
+        SELECT SUM(current_debt) FROM erp_customer WHERE deleted = 0
+    </select>
+
+    <!-- 收益今日流水（收款+付款） -->
+    <select id="selectTodayFinanceFlowList" resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO$FlowItem">
+        (SELECT 1 AS type, r.no AS no, c.name AS businessName, r.total_price AS amount, a.name AS accountName, r.order_time AS time
+         FROM erp_finance_receipt r
+         LEFT JOIN erp_customer c ON r.customer_id = c.id
+         LEFT JOIN erp_account a ON r.account_id = a.id
+         WHERE r.deleted = 0 AND r.status = 20 AND r.order_time BETWEEN #{beginTime} AND #{endTime})
+        UNION ALL
+        (SELECT 2 AS type, p.no AS no, s.name AS businessName, p.total_price AS amount, a.name AS accountName, p.order_time AS time
+         FROM erp_finance_payment p
+         LEFT JOIN erp_supplier s ON p.supplier_id = s.id
+         LEFT JOIN erp_account a ON p.account_id = a.id
+         WHERE p.deleted = 0 AND p.status = 20 AND p.order_time BETWEEN #{beginTime} AND #{endTime})
+        ORDER BY time DESC
     </select>
 
 </mapper>

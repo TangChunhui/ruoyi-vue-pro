@@ -1,7 +1,9 @@
 package cn.iocoder.yudao.module.erp.service.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOverviewRespVO;
 
 import java.util.List;
 
@@ -12,10 +14,35 @@ public interface ErpAgriReportService {
 
     /**
      * 获取农资收发存台账报表
-     *
-     * @param reqVO 查询条件（时间范围、仓库、产品）
-     * @return 收发存台账列表
      */
     List<ErpAgriStockBalanceRespVO> getStockBalanceReport(ErpAgriStockBalanceReqVO reqVO);
+
+    /**
+     * 获取农资运营合规预警概览
+     */
+    /**
+     * 获取农资运营合规预警概览
+     */
+    ErpAgriWarningOverviewRespVO getAgriWarningOverview();
+
+    /**
+     * 获取高毒限用农药销售电子台账
+     */
+    List<ErpAgriRestrictedSaleRespVO> getRestrictedSaleList(ErpAgriStockBalanceReqVO reqVO);
+
+    /**
+     * 获得全量销售明细列表（当日对账）
+     */
+    List<ErpAgriRestrictedSaleRespVO> getSalesDetailList(ErpAgriStockBalanceReqVO req);
+
+    /**
+     * 获得临期库存清单（基于批次效期）
+     */
+    List<ErpAgriStockBalanceRespVO> getExpiringStockList(Integer days);
+
+    /**
+     * 获取农资财务概览（应收、今日收支流水）
+     */
+    cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO getAgriFinanceSummary();
 
 }

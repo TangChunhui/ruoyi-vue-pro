@@ -15,6 +15,15 @@
           :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"
         />
       </el-form-item>
+      <el-form-item label="生产批次" prop="batchNo">
+        <el-input
+          v-model="queryParams.batchNo"
+          placeholder="请输入生产批次"
+          clearable
+          @keyup.enter="handleQuery"
+          class="!w-240px"
+        />
+      </el-form-item>
       
       <el-form-item>
         <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
@@ -33,9 +42,34 @@
       show-summary
     >
       <el-table-column label="产品编号" align="center" prop="productId" width="80" />
-      <el-table-column label="产品名称" align="center" prop="productName" />
+      <el-table-column label="产品名称" align="center" prop="productName">
+        <template #default="{ row }">
+          <span>{{ row.productName }}</span>
+          <el-tag v-if="row.isRestricted" type="danger" size="small" class="ml-1">高毒限用</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="规格型号" align="center" prop="standard" />
+      <el-table-column label="登记证有效期" align="center" width="160">
+        <template #default="{ row }">
+          <span :class="{ 'text-red-500 font-bold': isExpired(row.registrationExpiryDate) }">
+            {{ formatDateLabel(row.registrationExpiryDate) }}
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column label="单位" align="center" prop="unitName" width="80" />
+      <el-table-column label="生产批次" align="center" prop="batchNo" width="120" />
+      <el-table-column label="生产日期" align="center" width="120">
+        <template #default="{ row }">
+          {{ formatDateLabel(row.productionDate) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" align="center" width="120">
+        <template #default="{ row }">
+          <span :class="{ 'text-red-500 font-bold': isExpired(row.expiryDate) }">
+            {{ formatDateLabel(row.expiryDate) }}
+          </span>
+        </template>
+      </el-table-column>
       
       <el-table-column label="期初库存" align="center">
         <el-table-column label="数量" align="center" prop="openingStock" />
@@ -59,8 +93,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useMessage } from '@/hooks/web/useMessage'
 import { AgriReportApi } from '@/api/erp/agri/report'
+import { useMessage } from '@/hooks/web/useMessage'
+import dayjs from 'dayjs'
 
 defineOptions({ name: 'AgriStockBalanceReport' })
 
@@ -69,19 +104,20 @@ const message = useMessage()
 const loading = ref(false)
 const list = ref([])
 const queryParams = reactive({
-  timeRange: [] as string[]
+  timeRange: [] as string[],
+  batchNo: undefined
 })
 
 /** 查询列表 */
 const getList = async () => {
   loading.value = true
   try {
-    let params = {}
+    const params: any = {
+      batchNo: queryParams.batchNo
+    }
     if (queryParams.timeRange && queryParams.timeRange.length === 2) {
-      params = {
-        beginTime: queryParams.timeRange[0],
-        endTime: queryParams.timeRange[1]
-      }
+      params.beginTime = queryParams.timeRange[0]
+      params.endTime = queryParams.timeRange[1]
     }
     const data = await AgriReportApi.getStockBalanceReport(params)
     list.value = data || []
@@ -93,6 +129,17 @@ const getList = async () => {
   }
 }
 
+/** 格式化日期显示 */
+const formatDateLabel = (val) => {
+  return val ? dayjs(val).format('YYYY-MM-DD') : '--'
+}
+
+/** 判断是否过期 */
+const isExpired = (val) => {
+  if (!val) return false
+  return dayjs(val).isBefore(dayjs())
+}
+
 /** 搜索按钮操作 */
 const handleQuery = () => {
   getList()
@@ -101,6 +148,7 @@ const handleQuery = () => {
 /** 重置按钮操作 */
 const resetQuery = () => {
   queryParams.timeRange = []
+  queryParams.batchNo = undefined
   handleQuery()
 }
 

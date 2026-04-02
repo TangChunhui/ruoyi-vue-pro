@@ -1,8 +1,10 @@
 package cn.iocoder.yudao.module.erp.controller.admin.agri;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOverviewRespVO;
 import cn.iocoder.yudao.module.erp.service.agri.ErpAgriReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,6 +37,41 @@ public class ErpAgriReportController {
     @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
     public CommonResult<List<ErpAgriStockBalanceRespVO>> getStockBalanceReport(@Valid ErpAgriStockBalanceReqVO reqVO) {
         return success(agriReportService.getStockBalanceReport(reqVO));
+    }
+
+    @GetMapping("/get-warning-overview")
+    @Operation(summary = "获取农资运营合规预警概览")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<ErpAgriWarningOverviewRespVO> getAgriWarningOverview() {
+        return success(agriReportService.getAgriWarningOverview());
+    }
+
+    @GetMapping("/restricted-sale-list")
+    @Operation(summary = "获得高毒限用农资销售详细单据（电子台账）")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<ErpAgriRestrictedSaleRespVO>> getRestrictedSaleList(@Valid ErpAgriStockBalanceReqVO reqVO) {
+        return success(agriReportService.getRestrictedSaleList(reqVO));
+    }
+
+    @GetMapping("/sales-detail-list")
+    @Operation(summary = "获得全量销售明细列表（当日对账/全量追溯）")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<ErpAgriRestrictedSaleRespVO>> getSalesDetailList(@Valid ErpAgriStockBalanceReqVO reqVO) {
+        return success(agriReportService.getSalesDetailList(reqVO));
+    }
+
+    @GetMapping("/expiring-stock-list")
+    @Operation(summary = "获得临期库存清单（基于批次效期）")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<ErpAgriStockBalanceRespVO>> getExpiringStockList(Integer days) {
+        return success(agriReportService.getExpiringStockList(days));
+    }
+
+    @GetMapping("/finance-summary")
+    @Operation(summary = "获取农资财务概览（应收、今日收支流水）")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO> getAgriFinanceSummary() {
+        return success(agriReportService.getAgriFinanceSummary());
     }
 
 }
