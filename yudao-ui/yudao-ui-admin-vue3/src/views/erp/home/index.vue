@@ -29,6 +29,41 @@
         <SummaryCard title="今年采购" :value="purchaseSummary?.yearPrice" />
       </el-col>
     </el-row>
+    <!-- 农资经营/合规预警概览 -->
+    <el-row :gutter="16" class="row">
+      <el-col :md="6" :sm="12" :xs="24">
+        <el-card shadow="never" class="!bg-red-50">
+          <div class="flex flex-col items-center">
+            <div class="text-14px text-gray-400">登记证 30天内到期</div>
+            <div class="text-24px font-bold text-red-600">{{ agriWarningSummary?.expiringProductCount || 0 }}</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12" :xs="24">
+        <el-card shadow="never" class="!bg-orange-50">
+          <div class="flex flex-col items-center">
+            <div class="text-14px text-gray-400">资质已失效供应商</div>
+            <div class="text-24px font-bold text-orange-600">{{ agriWarningSummary?.expiredSupplierCount || 0 }}</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12" :xs="24">
+        <el-card shadow="never" class="!bg-blue-50">
+          <div class="flex flex-col items-center">
+            <div class="text-14px text-gray-400">欠款超额/预警客户</div>
+            <div class="text-24px font-bold text-blue-600">{{ agriWarningSummary?.warningCustomerCount || 0 }}</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12" :xs="24">
+        <el-card shadow="never" class="!bg-purple-50">
+          <div class="flex flex-col items-center">
+            <div class="text-14px text-gray-400">本月受控农药笔数</div>
+            <div class="text-24px font-bold text-purple-600">{{ agriWarningSummary?.monthlyRestrictedSaleCount || 0 }}</div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
     <!-- 销售/采购的时段统计 -->
     <el-row :gutter="16" class="row">
       <!-- 销售统计 -->
@@ -55,6 +90,7 @@ import {
   ErpPurchaseTimeSummaryRespVO,
   PurchaseStatisticsApi
 } from '@/api/erp/statistics/purchase'
+import { AgriReportApi } from '@/api/erp/agri/report'
 
 /** 商城首页 */
 defineOptions({ name: 'ErpHome' })
@@ -77,10 +113,16 @@ const getPurchaseSummary = async () => {
   purchaseTimeSummaryList.value = await PurchaseStatisticsApi.getPurchaseTimeSummary()
 }
 
+/** 获得农资预警统计 */
+const agriWarningSummary = ref()
+const getAgriWarningSummary = async () => {
+  agriWarningSummary.value = await AgriReportApi.getAgriWarningOverview()
+}
+
 /** 初始化 **/
 onMounted(async () => {
   loading.value = true
-  await Promise.all([getSaleSummary(), getPurchaseSummary()])
+  await Promise.all([getSaleSummary(), getPurchaseSummary(), getAgriWarningSummary()])
   loading.value = false
 })
 </script>

@@ -13,15 +13,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Schema(description = "管理后台 - ERP 库存调拨单新增/修改 Request VO")
+@Schema(description = "管理后台 - ERP 库存调拨单新增/修改 Request VO (农资进阶版)")
 @Data
 public class ErpStockMoveSaveReqVO {
 
-    @Schema(description = "调拨编号", requiredMode = Schema.RequiredMode.REQUIRED, example = "11756")
+    @Schema(description = "调拨单编号", example = "11756")
     private Long id;
-
-    @Schema(description = "客户编号", example = "3113")
-    private Long customerId;
 
     @Schema(description = "调拨时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "调拨时间不能为空")
@@ -62,6 +59,13 @@ public class ErpStockMoveSaveReqVO {
         @Schema(description = "产品数量", requiredMode = Schema.RequiredMode.REQUIRED, example = "100.00")
         @NotNull(message = "产品数量不能为空")
         private BigDecimal count;
+
+        @Schema(description = "生产批次号 (农资溯源)", example = "B240315")
+        private String batchNo;
+        @Schema(description = "生产日期")
+        private LocalDateTime productionDate;
+        @Schema(description = "保质截止日期")
+        private LocalDateTime expiryDate;
 
         @Schema(description = "备注", example = "随便")
         private String remark;

@@ -67,6 +67,19 @@ public class ErpStockController {
         return success(BeanUtils.toBean(stock, ErpStockRespVO.class));
     }
 
+    @GetMapping("/list")
+    @Operation(summary = "获得产品库存列表")
+    @Parameters({
+            @Parameter(name = "productId", description = "产品编号", example = "10"),
+            @Parameter(name = "warehouseId", description = "仓库编号", example = "2")
+    })
+    @PreAuthorize("@ss.hasPermission('erp:stock:query')")
+    public CommonResult<List<ErpStockRespVO>> getStockList(@RequestParam("productId") Long productId,
+                                                          @RequestParam("warehouseId") Long warehouseId) {
+        List<ErpStockDO> list = stockService.getStockList(productId, warehouseId);
+        return success(buildStockVOList(list));
+    }
+
     @GetMapping("/get-count")
     @Operation(summary = "获得产品库存数量")
     @Parameter(name = "productId", description = "产品编号", example = "10")
@@ -103,6 +116,21 @@ public class ErpStockController {
         Map<Long, ErpWarehouseDO> warehouseMap = warehouseService.getWarehouseMap(
                 convertSet(pageResult.getList(), ErpStockDO::getWarehouseId));
         return BeanUtils.toBean(pageResult, ErpStockRespVO.class, stock -> {
+            MapUtils.findAndThen(productMap, stock.getProductId(), product -> stock.setProductName(product.getName())
+                    .setCategoryName(product.getCategoryName()).setUnitName(product.getUnitName()));
+            MapUtils.findAndThen(warehouseMap, stock.getWarehouseId(), warehouse -> stock.setWarehouseName(warehouse.getName()));
+        });
+    }
+
+    private List<ErpStockRespVO> buildStockVOList(List<ErpStockDO> list) {
+        if (CollUtil.isEmpty(list)) {
+            return java.util.Collections.emptyList();
+        }
+        Map<Long, ErpProductRespVO> productMap = productService.getProductVOMap(
+                convertSet(list, ErpStockDO::getProductId));
+        Map<Long, ErpWarehouseDO> warehouseMap = warehouseService.getWarehouseMap(
+                convertSet(list, ErpStockDO::getWarehouseId));
+        return BeanUtils.toBean(list, ErpStockRespVO.class, stock -> {
             MapUtils.findAndThen(productMap, stock.getProductId(), product -> stock.setProductName(product.getName())
                     .setCategoryName(product.getCategoryName()).setUnitName(product.getUnitName()));
             MapUtils.findAndThen(warehouseMap, stock.getWarehouseId(), warehouse -> stock.setWarehouseName(warehouse.getName()));
