@@ -189,9 +189,18 @@ public class ErpSaleReturnServiceImpl implements ErpSaleReturnService {
                 : ErpStockRecordBizTypeEnum.SALE_RETURN_CANCEL.getType();
         saleReturnItems.forEach(saleReturnItem -> {
             BigDecimal count = approve ? saleReturnItem.getCount() : saleReturnItem.getCount().negate();
-            stockRecordService.createStockRecord(new ErpStockRecordCreateReqBO(
-                    saleReturnItem.getProductId(), saleReturnItem.getWarehouseId(), count,
-                    bizType, saleReturnItem.getReturnId(), saleReturnItem.getId(), saleReturn.getNo()));
+            stockRecordService.createStockRecord(ErpStockRecordCreateReqBO.builder()
+                    .productId(saleReturnItem.getProductId())
+                    .warehouseId(saleReturnItem.getWarehouseId())
+                    .count(count)
+                    .bizType(bizType)
+                    .bizId(saleReturnItem.getReturnId())
+                    .bizItemId(saleReturnItem.getId())
+                    .bizNo(saleReturn.getNo())
+                    .batchNo(saleReturnItem.getBatchNo())
+                    .productionDate(saleReturnItem.getProductionDate())
+                    .expiryDate(saleReturnItem.getExpiryDate())
+                    .build());
         });
     }
 

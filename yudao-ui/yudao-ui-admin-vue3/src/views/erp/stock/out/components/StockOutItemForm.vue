@@ -75,6 +75,56 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-select
+              v-model="row.batchNo"
+              placeholder="请选择"
+              @focus="onFocusBatch(row)"
+              @change="onChangeBatch($event, row)"
+            >
+              <el-option
+                v-for="item in row.batchList"
+                :key="item.batchNo"
+                :label="item.batchNo"
+                :value="item.batchNo"
+              >
+                <span style="float: left">{{ item.batchNo }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px">
+                  存:{{ item.count }}
+                </span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column label="数量" prop="count" fixed="right" min-width="140">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.count`" :rules="formRules.count" class="mb-0px!">
@@ -130,6 +180,7 @@
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
 import { StockApi } from '@/api/erp/stock/stock'
+import type { SummaryMethodProps } from 'element-plus'
 import {
   erpCountInputFormatter,
   erpPriceInputFormatter,
@@ -211,6 +262,10 @@ const handleAdd = () => {
     stockCount: undefined,
     count: 1,
     totalPrice: undefined,
+    batchNo: undefined,
+    batchList: [], // 备选批次列表
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
@@ -222,7 +277,7 @@ const handleDelete = (index) => {
 }
 
 /** 处理仓库变更 */
-const onChangeWarehouse = (warehouseId, row) => {
+const onChangeWarehouse = (_warehouseId, row) => {
   // 加载库存
   setStockCount(row)
 }
@@ -246,6 +301,27 @@ const setStockCount = async (row) => {
   }
   const stock = await StockApi.getStock2(row.productId, row.warehouseId)
   row.stockCount = stock ? stock.count : 0
+}
+
+/** 聚焦批次选择 */
+const onFocusBatch = async (row) => {
+  if (!row.productId || !row.warehouseId) {
+    return
+  }
+  row.batchList = await StockApi.getStockList({
+    productId: row.productId,
+    warehouseId: row.warehouseId
+  })
+}
+
+/** 批次变更联动 */
+const onChangeBatch = (batchNo, row) => {
+  const batch = row.batchList.find((item) => item.batchNo === batchNo)
+  if (batch) {
+    row.productionDate = batch.productionDate
+    row.expiryDate = batch.expiryDate
+    row.stockCount = batch.count
+  }
 }
 
 /** 表单校验 */

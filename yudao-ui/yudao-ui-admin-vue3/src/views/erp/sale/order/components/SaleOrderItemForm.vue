@@ -51,6 +51,39 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column label="数量" prop="count" fixed="right" min-width="140">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.count`" :rules="formRules.count" class="mb-0px!">
@@ -189,7 +222,7 @@ watch(
 )
 
 /** 合计 */
-const getSummaries = (param: SummaryMethodProps) => {
+const getSummaries = (param: any) => {
   const { columns, data } = param
   const sums: string[] = []
   columns.forEach((column, index: number) => {
@@ -223,6 +256,9 @@ const handleAdd = () => {
     taxPercent: undefined,
     taxPrice: undefined,
     totalPrice: undefined,
+    batchNo: undefined,
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
@@ -254,11 +290,19 @@ const setStockCount = async (row: any) => {
   row.stockCount = count || 0
 }
 
+/** 判断是否存在高毒限用产品 */
+const hasRestrictedItem = computed(() => {
+  return formData.value.some((item) => {
+    const product = productList.value.find((p) => p.id === item.productId)
+    return product?.isRestricted
+  })
+})
+
 /** 表单校验 */
 const validate = () => {
   return formRef.value.validate()
 }
-defineExpose({ validate })
+defineExpose({ validate, hasRestrictedItem })
 
 /** 初始化 */
 onMounted(async () => {

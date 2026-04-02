@@ -181,9 +181,18 @@ public class ErpPurchaseInServiceImpl implements ErpPurchaseInService {
                 : ErpStockRecordBizTypeEnum.PURCHASE_IN_CANCEL.getType();
         purchaseInItems.forEach(purchaseInItem -> {
             BigDecimal count = approve ? purchaseInItem.getCount() : purchaseInItem.getCount().negate();
-            stockRecordService.createStockRecord(new ErpStockRecordCreateReqBO(
-                    purchaseInItem.getProductId(), purchaseInItem.getWarehouseId(), count,
-                    bizType, purchaseInItem.getInId(), purchaseInItem.getId(), purchaseIn.getNo()));
+            stockRecordService.createStockRecord(ErpStockRecordCreateReqBO.builder()
+                    .productId(purchaseInItem.getProductId())
+                    .warehouseId(purchaseInItem.getWarehouseId())
+                    .count(count)
+                    .bizType(bizType)
+                    .bizId(purchaseInItem.getInId())
+                    .bizItemId(purchaseInItem.getId())
+                    .bizNo(purchaseIn.getNo())
+                    .batchNo(purchaseInItem.getBatchNo())
+                    .productionDate(purchaseInItem.getProductionDate())
+                    .expiryDate(purchaseInItem.getExpiryDate())
+                    .build());
         });
     }
 

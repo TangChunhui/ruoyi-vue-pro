@@ -1,7 +1,6 @@
 package cn.iocoder.yudao.module.erp.dal.dataobject.purchase;
 
 import cn.iocoder.yudao.framework.mybatis.core.dataobject.BaseDO;
-import cn.iocoder.yudao.module.erp.dal.dataobject.product.ErpProductDO;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -72,6 +71,19 @@ public class ErpPurchaseOrderItemDO extends BaseDO {
      * taxPrice = totalPrice * taxPercent
      */
     private BigDecimal taxPrice;
+
+    /**
+     * 生产批次号 (农资溯源)
+     */
+    private String batchNo;
+    /**
+     * 生产日期
+     */
+    private java.time.LocalDateTime productionDate;
+    /**
+     * 有效期至
+     */
+    private java.time.LocalDateTime expiryDate;
 
     /**
      * 备注

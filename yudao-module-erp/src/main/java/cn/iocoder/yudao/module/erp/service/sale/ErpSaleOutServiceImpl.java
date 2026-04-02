@@ -189,9 +189,18 @@ public class ErpSaleOutServiceImpl implements ErpSaleOutService {
                 : ErpStockRecordBizTypeEnum.SALE_OUT_CANCEL.getType();
         saleOutItems.forEach(saleOutItem -> {
             BigDecimal count = approve ? saleOutItem.getCount().negate() : saleOutItem.getCount();
-            stockRecordService.createStockRecord(new ErpStockRecordCreateReqBO(
-                    saleOutItem.getProductId(), saleOutItem.getWarehouseId(), count,
-                    bizType, saleOutItem.getOutId(), saleOutItem.getId(), saleOut.getNo()));
+            stockRecordService.createStockRecord(ErpStockRecordCreateReqBO.builder()
+                    .productId(saleOutItem.getProductId())
+                    .warehouseId(saleOutItem.getWarehouseId())
+                    .count(count)
+                    .bizType(bizType)
+                    .bizId(saleOutItem.getOutId())
+                    .bizItemId(saleOutItem.getId())
+                    .bizNo(saleOut.getNo())
+                    .batchNo(saleOutItem.getBatchNo())
+                    .productionDate(saleOutItem.getProductionDate())
+                    .expiryDate(saleOutItem.getExpiryDate())
+                    .build());
         });
     }
 

@@ -56,6 +56,39 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column
         label="原数量"
         fixed="right"
@@ -172,6 +205,7 @@ import {
   getSumValue
 } from '@/utils'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
+import type { SummaryMethodProps } from 'element-plus'
 
 const props = defineProps<{
   items: undefined
@@ -261,6 +295,9 @@ const handleAdd = () => {
     taxPercent: undefined,
     taxPrice: undefined,
     totalPrice: undefined,
+    batchNo: undefined,
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)

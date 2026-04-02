@@ -62,6 +62,39 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column
         label="原数量"
         fixed="right"
@@ -233,7 +266,7 @@ watch(
 )
 
 /** 合计 */
-const getSummaries = (param: SummaryMethodProps) => {
+const getSummaries = (param: any) => {
   const { columns, data } = param
   const sums: string[] = []
   columns.forEach((column, index: number) => {
@@ -267,6 +300,9 @@ const handleAdd = () => {
     taxPercent: undefined,
     taxPrice: undefined,
     totalPrice: undefined,
+    batchNo: undefined,
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
@@ -290,7 +326,7 @@ const setStockCount = async (row: any) => {
 const validate = () => {
   return formRef.value.validate()
 }
-defineExpose({ validate })
+defineExpose({ validate, handleAdd })
 
 /** 初始化 */
 onMounted(async () => {

@@ -51,6 +51,39 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column label="数量" prop="count" fixed="right" min-width="140">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.count`" :rules="formRules.count" class="mb-0px!">
@@ -148,6 +181,7 @@ import {
   erpPriceMultiply,
   getSumValue
 } from '@/utils'
+import dayjs from 'dayjs'
 
 const props = defineProps<{
   items: undefined
@@ -188,13 +222,18 @@ watch(
       } else {
         item.totalPrice = undefined
       }
+
+      // 智能推算有效期：如果填了生产日期，且产品有保质期天数，则自动计算有效期
+      if (item.productionDate && item.expiryDay && !item.expiryDate) {
+        item.expiryDate = dayjs(item.productionDate).add(item.expiryDay, 'day').format('YYYY-MM-DD HH:mm:ss')
+      }
     })
   },
   { deep: true }
 )
 
 /** 合计 */
-const getSummaries = (param: SummaryMethodProps) => {
+const getSummaries = (param: any) => {
   const { columns, data } = param
   const sums: string[] = []
   columns.forEach((column, index: number) => {
@@ -228,6 +267,9 @@ const handleAdd = () => {
     taxPercent: undefined,
     taxPrice: undefined,
     totalPrice: undefined,
+    batchNo: undefined,
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
@@ -245,6 +287,7 @@ const onChangeProduct = (productId, row) => {
     row.productUnitName = product.unitName
     row.productBarCode = product.barCode
     row.productPrice = product.purchasePrice
+    row.expiryDay = product.expiryDay // 记录保质期天数，用于后续智能推算
   }
   // 加载库存
   setStockCount(row)

@@ -130,9 +130,18 @@ public class ErpStockInServiceImpl implements ErpStockInService {
                 : ErpStockRecordBizTypeEnum.OTHER_IN_CANCEL.getType();
         stockInItems.forEach(stockInItem -> {
             BigDecimal count = approve ? stockInItem.getCount() : stockInItem.getCount().negate();
-            stockRecordService.createStockRecord(new ErpStockRecordCreateReqBO(
-                    stockInItem.getProductId(), stockInItem.getWarehouseId(), count,
-                    bizType, stockInItem.getInId(), stockInItem.getId(), stockIn.getNo()));
+            stockRecordService.createStockRecord(ErpStockRecordCreateReqBO.builder()
+                    .productId(stockInItem.getProductId())
+                    .warehouseId(stockInItem.getWarehouseId())
+                    .count(count)
+                    .bizType(bizType)
+                    .bizId(stockInItem.getInId())
+                    .bizItemId(stockInItem.getId())
+                    .bizNo(stockIn.getNo())
+                    .batchNo(stockInItem.getBatchNo())
+                    .productionDate(stockInItem.getProductionDate())
+                    .expiryDate(stockInItem.getExpiryDate())
+                    .build());
         });
     }
 

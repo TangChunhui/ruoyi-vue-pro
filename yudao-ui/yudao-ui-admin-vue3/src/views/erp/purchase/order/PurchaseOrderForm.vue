@@ -42,6 +42,23 @@
               />
             </el-select>
           </el-form-item>
+          <!-- 农资资质状态提示 -->
+          <div v-if="selectedSupplier && selectedSupplier.licenseExpiryDate" class="mt--10px mb-10px">
+            <el-alert
+              v-if="isLicenseExpired"
+              title="警告：该供应商的经营许可证已过期！请核实资质后再进行采购。"
+              type="error"
+              show-icon
+              :closable="false"
+            >
+              <template #default>
+                <div class="ml-1">
+                  证照编号：{{ selectedSupplier.businessLicenseNo || '未录入' }} <br/>
+                  过期日期：{{ formatDateLabel(selectedSupplier.licenseExpiryDate) }}
+                </div>
+              </template>
+            </el-alert>
+          </div>
         </el-col>
         <el-col :span="16">
           <el-form-item label="备注" prop="remark">
@@ -141,8 +158,9 @@ import { SupplierApi, SupplierVO } from '@/api/erp/purchase/supplier'
 import { erpPriceInputFormatter, erpPriceMultiply } from '@/utils'
 import * as UserApi from '@/api/system/user'
 import { AccountApi, AccountVO } from '@/api/erp/finance/account'
+import dayjs from 'dayjs'
 
-/** ERP 销售订单表单 */
+/** ERP 采购订单表单 */
 defineOptions({ name: 'PurchaseOrderForm' })
 
 const { t } = useI18n() // 国际化
@@ -179,6 +197,16 @@ const userList = ref<UserApi.UserVO[]>([]) // 用户列表
 /** 子表的表单 */
 const subTabsName = ref('item')
 const itemFormRef = ref()
+
+/** 农资资质监控 */
+const selectedSupplier = computed(() => supplierList.value.find(s => s.id === formData.value.supplierId))
+const isLicenseExpired = computed(() => {
+  if (!selectedSupplier.value || !selectedSupplier.value.licenseExpiryDate) return false
+  return dayjs(selectedSupplier.value.licenseExpiryDate).isBefore(dayjs())
+})
+const formatDateLabel = (val) => {
+  return val ? dayjs(val).format('YYYY-MM-DD') : '--'
+}
 
 /** 计算 discountPrice、totalPrice 价格 */
 watch(
@@ -241,6 +269,10 @@ const submitForm = async () => {
       await PurchaseOrderApi.updatePurchaseOrder(data)
       message.success(t('common.updateSuccess'))
     }
+    // 农资特殊逻辑：资质异常提醒
+    if (isLicenseExpired.value) {
+      await message.confirm('该供应商资质已过期，是否确认本次采购符合合规要求？')
+    }
     dialogVisible.value = false
     // 发送操作成功的事件
     emit('success')
@@ -262,7 +294,8 @@ const resetForm = () => {
     discountPrice: 0,
     totalPrice: 0,
     depositPrice: 0,
-    items: []
+    items: [],
+    no: undefined
   }
   formRef.value?.resetFields()
 }

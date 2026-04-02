@@ -75,6 +75,39 @@
           </el-form-item>
         </template>
       </el-table-column>
+      <el-table-column label="生产批次" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
+            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产日期" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.productionDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择日期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
+      <el-table-column label="有效期至" min-width="150">
+        <template #default="{ row, $index }">
+          <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
+            <el-date-picker
+              v-model="row.expiryDate"
+              type="date"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              placeholder="选择有效期"
+              class="!w-100%"
+            />
+          </el-form-item>
+        </template>
+      </el-table-column>
       <el-table-column label="数量" prop="count" fixed="right" min-width="140">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.count`" :rules="formRules.count" class="mb-0px!">
@@ -130,6 +163,8 @@
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
 import { StockApi } from '@/api/erp/stock/stock'
+import type { SummaryMethodProps } from 'element-plus'
+import dayjs from 'dayjs'
 import {
   erpCountInputFormatter,
   erpPriceInputFormatter,
@@ -173,6 +208,10 @@ watch(
     // 循环处理
     val.forEach((item) => {
       item.totalPrice = erpPriceMultiply(item.productPrice, item.count)
+      // 自动计算有效期：如果有生产日期且有保质期天数，则自动计算有效期至
+      if (item.productionDate && item.expiryDay && !item.expiryDate) {
+        item.expiryDate = dayjs(item.productionDate).add(item.expiryDay, 'day').format('YYYY-MM-DD HH:mm:ss')
+      }
     })
   },
   { deep: true }
@@ -211,6 +250,9 @@ const handleAdd = () => {
     stockCount: undefined,
     count: 1,
     totalPrice: undefined,
+    batchNo: undefined,
+    productionDate: undefined,
+    expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
@@ -222,7 +264,7 @@ const handleDelete = (index) => {
 }
 
 /** 处理仓库变更 */
-const onChangeWarehouse = (warehouseId, row) => {
+const onChangeWarehouse = (_warehouseId, row) => {
   // 加载库存
   setStockCount(row)
 }
@@ -234,6 +276,7 @@ const onChangeProduct = (productId, row) => {
     row.productUnitName = product.unitName
     row.productBarCode = product.barCode
     row.productPrice = product.minPrice
+    row.expiryDay = product.expiryDay
   }
   // 加载库存
   setStockCount(row)

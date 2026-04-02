@@ -74,6 +74,19 @@ public class ErpSaleOrderItemDO extends BaseDO {
     private BigDecimal taxPrice;
 
     /**
+     * 生产批次号 (农资溯源)
+     */
+    private String batchNo;
+    /**
+     * 生产日期
+     */
+    private java.time.LocalDateTime productionDate;
+    /**
+     * 有效期至
+     */
+    private java.time.LocalDateTime expiryDate;
+
+    /**
      * 备注
      */
     private String remark;
