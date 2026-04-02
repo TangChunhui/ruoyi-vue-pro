@@ -1,5 +1,5 @@
 <template>
-  <div class="agri-dashboard p-20px">
+  <div class="agri-dashboard">
     <!-- 1. 顶部指标概览 (Premium Cards) -->
     <el-row :gutter="20">
       <el-col :lg="6" :md="12" :sm="12" :xs="24" v-for="(item, index) in statCards" :key="index">
@@ -282,13 +282,28 @@ onMounted(fetchStats)
 </script>
 
 <style scoped lang="scss">
+.agri-dashboard {
+  padding: 20px;
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
+}
+
 .stat-card {
   border-radius: 12px;
   border: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 20px;
+  
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+  }
+  
+  @media (max-width: 768px) {
+    .stat-value {
+      font-size: 20px;
+    }
   }
 }
 .revenue { border-bottom: 4px solid #03A9F4; }
@@ -299,8 +314,18 @@ onMounted(fetchStats)
 .quick-actions {
   .action-item {
     background: #fcfcfc;
+    padding: 10px;
     &:active {
       transform: scale(0.95);
+    }
+    @media (max-width: 768px) {
+      .icon-box {
+        padding: 8px;
+        margin-bottom: 5px;
+      }
+      span.text-14px {
+        font-size: 13px;
+      }
     }
   }
 }
@@ -309,6 +334,14 @@ onMounted(fetchStats)
   border-radius: 12px;
   :deep(.el-card__header) {
     background: #fffafa;
+    @media (max-width: 768px) {
+      padding: 10px 15px;
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
   }
 }
 </style>

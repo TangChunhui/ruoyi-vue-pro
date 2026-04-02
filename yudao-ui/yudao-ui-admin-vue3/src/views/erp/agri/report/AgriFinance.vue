@@ -1,5 +1,5 @@
 <template>
-  <div class="agri-finance p-20px">
+  <div class="agri-finance">
     <!-- 1. 核心财务指标 (Premium Layout) -->
     <el-row :gutter="20">
       <el-col :lg="6" :md="12" :sm="12" :xs="24">
@@ -163,9 +163,18 @@ onMounted(fetchSummary)
 </script>
 
 <style scoped lang="scss">
+.agri-finance {
+  padding: 20px;
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
+}
+
 .finance-card {
   border-radius: 12px;
   border: none;
+  margin-bottom: 20px;
+  
   .icon-circle {
     width: 40px;
     height: 40px;
@@ -174,6 +183,20 @@ onMounted(fetchSummary)
     justify-content: center;
     align-items: center;
   }
+  
+  @media (max-width: 768px) {
+    .text-24px {
+      font-size: 20px;
+    }
+    .icon-circle {
+      width: 32px;
+      height: 32px;
+      :deep(.el-icon) {
+        font-size: 16px !important;
+      }
+    }
+  }
+  
   &.receivable { border-top: 4px solid #ff9800; }
   &.income { border-top: 4px solid #67c23a; }
   &.expense { border-top: 4px solid #f56c6c; }

@@ -87,8 +87,24 @@
         <el-table-column label="数量" align="center" prop="closingStock" />
       </el-table-column>
 
+      <el-table-column label="操作" align="center" width="160" fixed="right">
+        <template #default="{ row }">
+          <el-button type="primary" link @click="handlePrint(row)">
+            <Icon icon="ep:printer" class="mr-2px" /> 标签
+          </el-button>
+          <el-button type="success" link @click="handleTrace(row)">
+            <Icon icon="ep:link" class="mr-2px" /> 溯源
+          </el-button>
+        </template>
+      </el-table-column>
+
     </el-table>
   </ContentWrap>
+
+  <!-- 弹窗：打印标签 -->
+  <BatchPrint ref="printRef" />
+  <!-- 抽屉：溯源图 -->
+  <TraceabilityGraph ref="traceRef" />
 </template>
 
 <script setup lang="ts">
@@ -96,6 +112,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { AgriReportApi } from '@/api/erp/agri/report'
 import { useMessage } from '@/hooks/web/useMessage'
 import dayjs from 'dayjs'
+import BatchPrint from './components/BatchPrint.vue'
+import TraceabilityGraph from './components/TraceabilityGraph.vue'
 
 defineOptions({ name: 'AgriStockBalanceReport' })
 
@@ -107,6 +125,9 @@ const queryParams = reactive({
   timeRange: [] as string[],
   batchNo: undefined
 })
+
+const printRef = ref()
+const traceRef = ref()
 
 /** 查询列表 */
 const getList = async () => {
@@ -127,6 +148,16 @@ const getList = async () => {
   } finally {
     loading.value = false
   }
+}
+
+/** 打印标签 */
+const handlePrint = (row: any) => {
+  printRef.value.open(row)
+}
+
+/** 查看溯源 */
+const handleTrace = (row: any) => {
+  traceRef.value.open(row)
 }
 
 /** 格式化日期显示 */
@@ -159,7 +190,7 @@ onMounted(() => {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
   
-  const formatDate = (d: Date) => {
+  const formatDateStr = (d: Date) => {
     const yyyy = d.getFullYear()
     const mm = String(d.getMonth() + 1).padStart(2, '0')
     const dd = String(d.getDate()).padStart(2, '0')
@@ -169,7 +200,7 @@ onMounted(() => {
     return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`
   }
 
-  queryParams.timeRange = [formatDate(firstDay), formatDate(lastDay)]
+  queryParams.timeRange = [formatDateStr(firstDay), formatDateStr(lastDay)]
   
   getList()
 })
