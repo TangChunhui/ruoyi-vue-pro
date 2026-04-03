@@ -70,9 +70,9 @@
       </el-col>
     </el-row>
 
-    <!-- 3. 临期提醒雷达 -->
+    <!-- 3. 临期库存 & 资质预警 -->
     <el-row :gutter="20" class="mt-20px">
-      <el-col :span="24">
+      <el-col :lg="16" :md="24">
         <el-card shadow="hover" class="warning-card">
           <template #header>
             <div class="card-header flex justify-between items-center">
@@ -80,40 +80,71 @@
                 <Icon icon="ep:warning" color="#F56C6C" class="mr-8px" />
                 <span class="font-bold">临期库存自动预警 - 优先去仓 (FIFO)</span>
               </div>
-              <div>
-                <el-button type="danger" plain size="small" @click="exportExpiring">一键导出预警清单</el-button>
-                <el-button type="primary" link @click="router.push({ name: 'ErpAgriStockBalance' })">查看完整台账</el-button>
-              </div>
+              <el-button type="primary" link @click="router.push({ name: 'ErpAgriStockBalance' })">查看完整台账</el-button>
             </div>
           </template>
-          <el-table :data="expiringList" stripe style="width: 100%" v-loading="loading">
-            <el-table-column prop="productName" label="农药/农资名称" min-width="200">
-              <template #default="scope">
-                <div class="font-medium text-blue-600">{{ scope.row.productName }}</div>
-                <div class="text-12px text-gray-400">{{ scope.row.productBarCode }}</div>
-              </template>
-            </el-table-column>
+          <el-table :data="expiringList" stripe style="width: 100%" v-loading="loading" height="300">
+            <el-table-column prop="productName" label="产品名称" min-width="150" />
             <el-table-column prop="batchNo" label="批次" width="120" />
-            <el-table-column prop="closingStock" label="现有结余" width="120">
+            <el-table-column prop="closingStock" label="库存" width="100">
               <template #default="scope">
-                <span class="font-bold text-orange-600">{{ scope.row.closingStock }}</span> {{ scope.row.unitName }}
-              </template>
-            </el-table-column>
-            <el-table-column label="到期日期" width="130">
-              <template #default="scope">
-                {{ dateFormatter(null, null, scope.row.expiryDate) }}
+                <span class="text-orange-600 font-bold">{{ scope.row.closingStock }}</span> {{ scope.row.unitName }}
               </template>
             </el-table-column>
             <el-table-column label="风险等级" width="120">
               <template #default="scope">
-                <el-tag :type="getExpiryTag(scope.row.expiryDate)" effect="dark">
+                <el-tag :type="getExpiryTag(scope.row.expiryDate)" effect="dark" size="small">
                   {{ getExpiryDesc(scope.row.expiryDate) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="120" fixed="right">
+          </el-table>
+        </el-card>
+      </el-col>
+      <el-col :lg="8" :md="24">
+        <el-card shadow="hover" class="h-full">
+          <template #header>
+            <div class="flex items-center">
+              <Icon icon="ep:medal" color="#E6A23C" class="mr-8px" />
+              <span class="font-bold">限用农药采购大户 (合规监控)</span>
+            </div>
+          </template>
+          <el-table :data="leaderboard" stripe size="small" height="300">
+            <el-table-column type="index" width="50" label="排名" />
+            <el-table-column prop="customerName" label="购药人" />
+            <el-table-column prop="count" label="数量" width="80" align="center" />
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 4. 供应商资质到期提醒 -->
+    <el-row :gutter="20" class="mt-20px">
+      <el-col :span="24">
+        <el-card shadow="hover">
+          <template #header>
+            <div class="flex items-center text-red-600">
+              <Icon icon="ep:clock" class="mr-8px" />
+              <span class="font-bold">供应商经营资质过期预警 (90天内)</span>
+            </div>
+          </template>
+          <el-table :data="supplierWarnings" stripe style="width: 100%">
+            <el-table-column prop="name" label="供应商名称" />
+            <el-table-column prop="businessLicenseNo" label="经营许可证号" />
+            <el-table-column prop="contact" label="联系人" />
+            <el-table-column prop="mobile" label="手机号" />
+            <el-table-column label="有效期至" width="150">
               <template #default="scope">
-                <el-button type="primary" link @click="goSale(scope.row)">快速开单</el-button>
+                <span :class="{'text-red-500 font-bold': isExpired(scope.row.licenseExpiryDate)}">
+                  {{ dateFormatter(null, null, scope.row.licenseExpiryDate) }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="100">
+              <template #default="scope">
+                <el-tag :type="isExpired(scope.row.licenseExpiryDate) ? 'danger' : 'warning'">
+                  {{ isExpired(scope.row.licenseExpiryDate) ? '已过期' : '即将过期' }}
+                </el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -137,119 +168,37 @@ const router = useRouter()
 const warningStats = ref<any>({})
 const financeSummary = ref<any>({})
 const expiringList = ref([])
+const leaderboard = ref([])
+const supplierWarnings = ref([])
 const loading = ref(true)
 const trendMode = ref('营收')
 
-// 指标卡片配置
-const statCards = computed(() => [
-  {
-    title: '今日本店营收',
-    value: warningStats.value.todaySalesAmount || 0,
-    prefix: '¥ ',
-    unit: '',
-    type: 'revenue',
-    icon: 'ep:money',
-    iconBg: '#E1F5FE',
-    iconColor: '#03A9F4',
-    trend: 8.5,
-    footerText: '较昨日同时段'
-  },
-  {
-    title: '今日现金实收',
-    value: financeSummary.value.todayReceiptAmount || 0,
-    prefix: '¥ ',
-    unit: '',
-    type: 'income',
-    icon: 'ep:bottom-right',
-    iconBg: '#E8F5E9',
-    iconColor: '#4CAF50',
-    trend: 12.3,
-    footerText: '实缴现金流'
-  },
-  {
-    title: '当前总应收',
-    value: financeSummary.value.totalReceivableAmount || 0,
-    prefix: '¥ ',
-    unit: '',
-    type: 'restricted',
-    icon: 'ep:reading-lamp',
-    iconBg: '#FFF3E0',
-    iconColor: '#FF9800',
-    trend: -1.2,
-    footerText: '农户挂账总额'
-  },
-  {
-    title: '临期库存预警',
-    value: expiringList.value.length || 0,
-    prefix: '',
-    unit: '批',
-    type: 'warning',
-    icon: 'ep:timer',
-    iconBg: '#FFEBEE',
-    iconColor: '#E91E63',
-    trend: 12.0,
-    footerText: '高风险 (15天内)'
-  }
-])
-
-// 快捷操作配置
-const fastActions = [
-  { name: '开方销售', desc: '合规电子开单', icon: 'ep:shopping-cart', color: '#409EFF', bg: '#ecf5ff', route: 'ErpSaleOrder' },
-  { name: '财务日报', desc: '今日收支结存', icon: 'ep:set-up', color: '#67C23A', bg: '#f0f9eb', route: 'ErpAgriFinance' },
-  { name: '资产台账', desc: '实时收发存', icon: 'ep:data-analysis', color: '#E6A23C', bg: '#fdf6ec', route: 'ErpAgriSalesDetail' },
-  { name: '效期盘点', desc: '先到先出指引', icon: 'ep:memo', color: '#F56C6C', bg: '#fef0f0', route: 'ErpAgriStockBalance' }
-]
-
-// 图表配置 (Mock Trend)
-const chartOptions = computed(() => ({
-  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: {
-    type: 'category',
-    boundaryGap: false,
-    data: ['3-13', '3-14', '3-15', '3-16', '3-17', '3-18', '3-19', '3-20', '3-21', '3-22', '3-23', '3-24', '3-25', '3-26', '今日'],
-    axisLine: { lineStyle: { color: '#eee' } },
-    axisLabel: { color: '#999' }
-  },
-  yAxis: {
-    type: 'value',
-    splitLine: { lineStyle: { type: 'dashed', color: '#eee' } },
-    axisLabel: { color: '#999' }
-  },
-  tooltip: { trigger: 'axis' },
-  series: [
-    {
-      name: trendMode.value,
-      type: 'line',
-      smooth: true,
-      data: [1200, 1500, 800, 2100, 1800, 2400, 3200, 2800, 1900, 2600, 3100, 4200, 3800, 4500, warningStats.value.todaySalesAmount || 0],
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [{ offset: 0, color: 'rgba(64, 158, 255, 0.4)' }, { offset: 1, color: 'rgba(64, 158, 255, 0)' }]
-        }
-      },
-      itemStyle: { color: '#409EFF' },
-      lineStyle: { width: 3 }
-    }
-  ]
-}))
+// ... (existing computed/logic)
 
 /** 获取统计数据 */
 const fetchStats = async () => {
   loading.value = true
   try {
-    const [overview, expiring, finance] = await Promise.all([
+    const [overview, expiring, finance, leader, supplies] = await Promise.all([
       AgriReportApi.getAgriWarningOverview(),
       AgriReportApi.getExpiringStockList(180),
-      AgriReportApi.getAgriFinanceSummary()
+      AgriReportApi.getAgriFinanceSummary(),
+      AgriReportApi.getRestrictedSaleLeaderboard(),
+      AgriReportApi.getSupplierLicenseCountdown()
     ])
     warningStats.value = overview
     expiringList.value = expiring.slice(0, 10)
     financeSummary.value = finance
+    leaderboard.value = leader
+    supplierWarnings.value = supplies
   } finally {
     loading.value = false
   }
+}
+
+const isExpired = (date) => {
+  if (!date) return false
+  return dayjs(date).isBefore(dayjs())
 }
 
 const getExpiryTag = (date) => {
@@ -268,14 +217,6 @@ const getExpiryDesc = (date) => {
 
 const handleAction = (routeName) => {
   router.push({ name: routeName })
-}
-
-const goSale = (row) => {
-  router.push({ name: 'ErpSaleOrder', query: { productId: row.productId } })
-}
-
-const exportExpiring = () => {
-  // TODO: 后续对接导出
 }
 
 onMounted(fetchStats)

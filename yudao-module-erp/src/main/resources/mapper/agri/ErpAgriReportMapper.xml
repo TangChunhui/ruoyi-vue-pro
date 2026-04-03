@@ -265,4 +265,33 @@
         ORDER BY time DESC
     </select>
 
+    <!-- 高毒限用农资采购排行（按客户聚合） -->
+    <select id="selectRestrictedSaleLeaderboard"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO">
+        SELECT
+            c.name AS customerName,
+            SUM(i.count) AS count,
+            SUM(i.total_price) AS totalPrice
+        FROM erp_sale_order o
+        INNER JOIN erp_sale_order_item i ON o.id = i.order_id AND i.deleted = 0
+        INNER JOIN erp_product p ON i.product_id = p.id AND p.deleted = 0
+        LEFT JOIN erp_customer c ON o.customer_id = c.id AND c.deleted = 0
+        WHERE o.deleted = 0 AND o.status = 20
+          AND p.is_restricted = 1
+        GROUP BY c.id, c.name
+        ORDER BY count DESC
+        LIMIT 10
+    </select>
+
+    <!-- 供货商资质到期预警列表 -->
+    <select id="selectSupplierLicenseCountdown"
+            resultType="cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO">
+        SELECT id, name, contact, mobile, business_license_no AS businessLicenseNo, license_expiry_date AS licenseExpiryDate
+        FROM erp_supplier
+        WHERE deleted = 0
+          AND license_expiry_date IS NOT NULL
+          AND license_expiry_date &lt;= DATE_ADD(NOW(), INTERVAL 90 DAY)
+        ORDER BY license_expiry_date ASC
+    </select>
+
 </mapper>

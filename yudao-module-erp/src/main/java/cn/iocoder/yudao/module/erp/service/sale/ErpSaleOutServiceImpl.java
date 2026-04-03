@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.erp.service.sale;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.number.MoneyUtils;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
@@ -20,6 +21,7 @@ import cn.iocoder.yudao.module.erp.service.finance.ErpAccountService;
 import cn.iocoder.yudao.module.erp.service.product.ErpProductService;
 import cn.iocoder.yudao.module.erp.service.stock.ErpStockRecordService;
 import cn.iocoder.yudao.module.erp.service.stock.bo.ErpStockRecordCreateReqBO;
+import cn.iocoder.yudao.module.erp.service.agri.VideoStorageService;
 import cn.iocoder.yudao.module.system.api.user.AdminUserApi;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -68,6 +70,8 @@ public class ErpSaleOutServiceImpl implements ErpSaleOutService {
 
     @Resource
     private AdminUserApi adminUserApi;
+    @Resource
+    private VideoStorageService videoStorageService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -100,6 +104,11 @@ public class ErpSaleOutServiceImpl implements ErpSaleOutService {
 
         // 3. 更新销售订单的出库数量
         updateSaleOrderOutCount(createReqVO.getOrderId());
+
+        // 4. 触发视频抓取
+        videoStorageService.downloadAndStoreVideo(saleOut.getId(), "sale_out",
+                saleOut.getCameraId(), saleOut.getVideoTime() != null ? saleOut.getVideoTime() : saleOut.getOutTime());
+
         return saleOut.getId();
     }
 
@@ -135,6 +144,12 @@ public class ErpSaleOutServiceImpl implements ErpSaleOutService {
         // 3.2 注意：如果销售订单编号变更了，需要更新“老”销售订单的出库数量
         if (ObjectUtil.notEqual(saleOut.getOrderId(), updateObj.getOrderId())) {
             updateSaleOrderOutCount(saleOut.getOrderId());
+        }
+
+        // 4. 触发视频抓取 (如果 cameraId 存在)
+        if (StrUtil.isNotEmpty(updateObj.getCameraId())) {
+            videoStorageService.downloadAndStoreVideo(updateObj.getId(), "sale_out",
+                    updateObj.getCameraId(), updateObj.getVideoTime() != null ? updateObj.getVideoTime() : updateObj.getOutTime());
         }
     }
 

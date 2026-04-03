@@ -94,4 +94,14 @@ public interface ErpAgriReportMapper {
             @Param("beginTime") java.time.LocalDateTime beginTime,
             @Param("endTime") java.time.LocalDateTime endTime);
 
+    /**
+     * 获取高毒限用农资采购排行（合规排查）
+     */
+    List<ErpAgriRestrictedSaleRespVO> selectRestrictedSaleLeaderboard();
+
+    /**
+     * 获得供货商资质到期预警列表
+     */
+    List<cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO> selectSupplierLicenseCountdown();
+
 }

@@ -23,5 +23,20 @@ export const AgriReportApi = {
     // 获取农资财务概览（应收、今日收支流水）
     getAgriFinanceSummary: async () => {
         return await request.get({ url: `/erp/agri-report/finance-summary` })
+    },
+    // 获取高毒限用农资采购排行
+    getRestrictedSaleLeaderboard: async () => {
+        return await request.get({ url: `/erp/agri-report/restricted-sale-leaderboard` })
+    },
+    // 获得供货商资质到期预警列表
+    getSupplierLicenseCountdown: async () => {
+        return await request.get({ url: `/erp/agri-report/supplier-license-countdown` })
+    },
+    // 获得监控回放地址
+    getPlaybackUrl: async (bizId: number, bizType: string, preMinutes?: number, postMinutes?: number) => {
+        return await request.get({ 
+            url: `/erp/agri-report/get-playback-url`, 
+            params: { bizId, bizType, preMinutes, postMinutes } 
+        })
     }
 }

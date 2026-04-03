@@ -56,6 +56,9 @@ public class ProductSaveReqVO {
     private BigDecimal minPrice;
 
     // ========== 农资扩展信息 ==========
+    @Schema(description = "农药登记证号", example = "PD20150001")
+    private String registrationNo;
+
     @Schema(description = "农药登记证有效期")
     private java.time.LocalDateTime registrationExpiryDate;
 

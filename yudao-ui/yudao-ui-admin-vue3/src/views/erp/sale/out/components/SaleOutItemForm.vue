@@ -62,10 +62,31 @@
           </el-form-item>
         </template>
       </el-table-column>
-      <el-table-column label="生产批次" min-width="150">
+      <el-table-column label="生产批次" min-width="200">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
-            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+            <el-select
+              v-model="row.batchNo"
+              clearable
+              filterable
+              placeholder="请选择批次"
+              @change="onBatchChange($event, row)"
+              @visible-change="onBatchVisibleChange($event, row)"
+            >
+              <el-option
+                v-for="item in row.batchList"
+                :key="item.batchNo"
+                :label="`${item.batchNo} (余:${item.count})`"
+                :value="item.batchNo"
+              >
+                <div class="flex justify-between items-center w-full">
+                  <span>{{ item.batchNo }}</span>
+                  <el-tag size="small" :type="getExpiryTag(item.expiryDate)">
+                    {{ erpCountInputFormatter(item.count) }} | {{ formatDate(item.expiryDate) }}
+                  </el-tag>
+                </div>
+              </el-option>
+            </el-select>
           </el-form-item>
         </template>
       </el-table-column>
@@ -74,6 +95,7 @@
           <el-form-item :prop="`${$index}.productionDate`" class="mb-0px!">
             <el-date-picker
               v-model="row.productionDate"
+              disabled
               type="date"
               value-format="YYYY-MM-DD HH:mm:ss"
               placeholder="选择日期"
@@ -87,6 +109,7 @@
           <el-form-item :prop="`${$index}.expiryDate`" class="mb-0px!">
             <el-date-picker
               v-model="row.expiryDate"
+              disabled
               type="date"
               value-format="YYYY-MM-DD HH:mm:ss"
               placeholder="选择有效期"
@@ -211,6 +234,7 @@ import {
   getSumValue
 } from '@/utils'
 import { WarehouseApi, WarehouseVO } from '@/api/erp/stock/warehouse'
+import dayjs from 'dayjs'
 
 const props = defineProps<{
   items: undefined
@@ -234,6 +258,9 @@ watch(
     val.forEach((item) => {
       if (item.warehouseId == null) {
         item.warehouseId = defaultWarehouse.value?.id
+      }
+      if (!item.batchList) {
+        item.batchList = []
       }
       if (item.stockCount === null && item.warehouseId != null) {
         setStockCount(item)
@@ -301,11 +328,58 @@ const handleAdd = () => {
     taxPrice: undefined,
     totalPrice: undefined,
     batchNo: undefined,
+    batchList: [],
     productionDate: undefined,
     expiryDate: undefined,
     remark: undefined
   }
   formData.value.push(row)
+}
+
+/** 批次下拉框显示时加载 */
+const onBatchVisibleChange = (visible: boolean, row: any) => {
+  if (visible && row.productId && row.warehouseId) {
+    fetchBatchList(row)
+  }
+}
+
+/** 批量获取批次列表 */
+const fetchBatchList = async (row: any) => {
+  try {
+    row.batchList = await StockApi.getStockList({
+      productId: row.productId,
+      warehouseId: row.warehouseId
+    })
+  } catch (error) {
+    console.error('Failed to fetch batches', error)
+  }
+}
+
+/** 批次变更处理 */
+const onBatchChange = (batchNo: string, row: any) => {
+  const batch = row.batchList?.find((b) => b.batchNo === batchNo)
+  if (batch) {
+    row.productionDate = batch.productionDate
+    row.expiryDate = batch.expiryDate
+    row.stockCount = batch.count
+  } else {
+    row.productionDate = undefined
+    row.expiryDate = undefined
+  }
+}
+
+/** 格式化日期 */
+const formatDate = (date: any) => {
+  return date ? dayjs(date).format('YYYY-MM-DD') : '无效期'
+}
+
+/** 获取效期标签类型 */
+const getExpiryTag = (date: any) => {
+  if (!date) return 'info'
+  const days = dayjs(date).diff(dayjs(), 'day')
+  if (days < 30) return 'danger'
+  if (days < 90) return 'warning'
+  return 'success'
 }
 
 /** 删除按钮操作 */

@@ -10,6 +10,8 @@ export interface SaleOutVO {
   totalPrice: number // 合计金额，单位：元
   status: number // 状态
   remark: string // 备注
+  cameraId: string // 监控设备 ID
+  videoUrl: string // 监控回放视频地址
 }
 
 // ERP 销售出库 API

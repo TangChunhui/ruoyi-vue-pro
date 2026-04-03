@@ -276,10 +276,19 @@
           <el-button
             link
             type="primary"
-            @click="handlePrint(scope.row.id)"
+            @click="handlePrint(scope.row)"
             v-hasPermi="['erp:sale-order:query']"
           >
             打印
+          </el-button>
+          <el-button
+            link
+            type="success"
+            @click="handlePlayVideo(scope.row)"
+            v-if="scope.row.cameraId"
+            v-hasPermi="['erp:agri-report:query']"
+          >
+            视频
           </el-button>
           <el-button
             link
@@ -303,6 +312,32 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <SaleOrderForm ref="formRef" @success="getList" />
+
+  <!-- 打印弹窗 (农资版) -->
+  <SaleCompliancePrint ref="printRef" />
+
+  <!-- 视频回放弹窗 -->
+  <Dialog v-model="videoVisible" title="监控视频回放 (Seetong)" width="800px">
+    <div class="flex justify-center flex-col items-center">
+      <video
+        v-if="videoUrl"
+        ref="videoPlayer"
+        :src="videoUrl"
+        controls
+        autoplay
+        class="w-full max-h-450px bg-black"
+      >
+        您的浏览器不支持视频播放。
+      </video>
+      <div v-else class="h-300px flex items-center justify-center text-gray-400">
+        <Icon icon="ep:video-play" :size="40" class="mb-10px" />
+        <span>正在获取视频流...</span>
+      </div>
+      <div class="mt-15px text-14px text-gray-500">
+        设备 ID: {{ currentCameraId }} | 业务时间: {{ currentOrderTime }}
+      </div>
+    </div>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -316,6 +351,9 @@ import { UserVO } from '@/api/system/user'
 import * as UserApi from '@/api/system/user'
 import { erpCountTableColumnFormatter, erpPriceTableColumnFormatter } from '@/utils'
 import { CustomerApi, CustomerVO } from '@/api/erp/sale/customer'
+import SaleCompliancePrint from './components/SaleCompliancePrint.vue'
+import { AgriReportApi } from '@/api/erp/agri/report'
+import { dateFormatter } from '@/utils/formatTime'
 
 /** ERP 销售订单列表 */
 defineOptions({ name: 'ErpSaleOrder' })
@@ -433,80 +471,43 @@ onMounted(async () => {
 })
 
 /** 打印销售单 (农资合规版) */
-const handlePrint = async (id: number) => {
-  const data = await SaleOrderApi.getSaleOrder(id)
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
+const printRef = ref()
+const handlePrint = async (row: any) => {
+  // 确保有 items 数据 (如果列表没带 items，则额外查询一次)
+  if (!row.items || row.items.length === 0) {
+    const data = await SaleOrderApi.getSaleOrder(row.id)
+    printRef.value.open(data)
+  } else {
+    printRef.value.open(row)
+  }
+}
 
-  // 1. 构建打印内容
-  let itemsHtml = ''
-  data.items.forEach((item, index) => {
-    itemsHtml += `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${item.productName}</td>
-        <td>${item.productUnitName || ''}</td>
-        <td>${item.count}</td>
-        <td>¥${item.productPrice.toFixed(2)}</td>
-        <td>¥${item.totalPrice.toFixed(2)}</td>
-      </tr>
-    `
-  })
-
-  const htmlContent = `
-    <html>
-      <head>
-        <title>农资产品销售送货单 - ${data.no}</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; }
-          .header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 20px; font-size: 14px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #333; padding: 8px; text-align: left; }
-          th { background: #f5f5f5; }
-          .footer { margin-top: 30px; border-top: 1px dashed #333; padding-top: 15px; font-size: 12px; }
-          .highlight { font-weight: bold; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h2>农业生产资料销售送货单 (合规凭证)</h2>
-          <div>单号: ${data.no} | 日期: ${dateFormatter2(null, null, data.orderTime)}</div>
-        </div>
-        <div class="info-grid">
-          <div>客户名称: <span class="highlight">${data.customerName || '散客'}</span></div>
-          <div>购药人证件: <span class="highlight">${data.buyerIdCard || '非受控药/未登记'}</span></div>
-          <div>用途建议: ${data.usageIntent || '--'}</div>
-          <div>用法建议: ${data.usageMethod || '--'}</div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>序号</th><th>产品名称</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th>
-            </tr>
-          </thead>
-          <tbody>${itemsHtml}</tbody>
-          <tfoot>
-            <tr>
-              <td colspan="4" style="text-align:right">合计:</td>
-              <td colspan="2" class="highlight">¥${data.totalPrice.toFixed(2)}</td>
-            </tr>
-          </tfoot>
-        </table>
-        <div class="footer">
-          注：请严格按照使用说明书或农技人员指导使用。农药登记证有效期内销售。
-          <br/>
-          打印来源: 农资ERP管理系统 | 打印时间: ${new Date().toLocaleString()}
-        </div>
-      </body>
-    </html>
-  `
-  // 2. 写入并打印
-  printWindow.document.write(htmlContent)
-  printWindow.document.close()
-  setTimeout(() => {
-    printWindow.print()
-    printWindow.close()
-  }, 500)
+/** 视频回放相关 */
+const videoVisible = ref(false)
+const videoUrl = ref('')
+const currentCameraId = ref('')
+const currentOrderTime = ref('')
+const handlePlayVideo = async (row: SaleOrderVO) => {
+  currentCameraId.value = row.cameraId
+  currentOrderTime.value = dateFormatter(null, null, row.orderTime)
+  videoUrl.value = ''
+  videoVisible.value = true
+  try {
+    // 优先使用已抓取的本地/云端视频
+    if (row.videoUrl) {
+      videoUrl.value = row.videoUrl
+      return
+    }
+    // 否则动态获取回放地址
+    // 默认使用后端配置的分钟数
+    videoUrl.value = await AgriReportApi.getPlaybackUrl(row.id, 'sale_order')
+    if (!videoUrl.value) {
+      message.error('无法获取该时段的监控回放，请检查设备连通性或云存储状态')
+      videoVisible.value = false
+    }
+  } catch (e) {
+    console.error(e)
+    videoVisible.value = false
+  }
 }
 </script>

@@ -29,4 +29,10 @@ public class ErpAgriStockBalanceReqVO {
     @Schema(description = "产品编号", example = "1")
     private Long productId;
 
+    @Schema(description = "生产批次号", example = "B20240101")
+    private String batchNo;
+
+    @Schema(description = "客户编号", example = "1")
+    private Long customerId;
+
 }

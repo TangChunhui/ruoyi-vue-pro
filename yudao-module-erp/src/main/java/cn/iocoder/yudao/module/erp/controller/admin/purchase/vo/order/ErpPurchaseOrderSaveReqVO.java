@@ -65,6 +65,13 @@ public class ErpPurchaseOrderSaveReqVO {
         @Schema(description = "税率，百分比", example = "99.88")
         private BigDecimal taxPercent;
 
+        @Schema(description = "生产批次号", example = "B240315")
+        private String batchNo;
+        @Schema(description = "生产日期")
+        private LocalDateTime productionDate;
+        @Schema(description = "有效期至")
+        private LocalDateTime expiryDate;
+
         @Schema(description = "备注", example = "随便")
         private String remark;
 

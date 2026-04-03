@@ -4,7 +4,12 @@ import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSal
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOverviewRespVO;
+import cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOrderDO;
+import cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOutDO;
 import cn.iocoder.yudao.module.erp.dal.mysql.agri.ErpAgriReportMapper;
+import cn.iocoder.yudao.module.erp.dal.mysql.sale.ErpSaleOrderMapper;
+import cn.iocoder.yudao.module.erp.dal.mysql.sale.ErpSaleOutMapper;
+import cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -20,6 +25,14 @@ public class ErpAgriReportServiceImpl implements ErpAgriReportService {
 
     @Resource
     private ErpAgriReportMapper agriReportMapper;
+    @Resource
+    private ErpSaleOrderMapper saleOrderMapper;
+    @Resource
+    private ErpSaleOutMapper saleOutMapper;
+    @Resource
+    private SeetongClient seetongClient;
+    @Resource
+    private cn.iocoder.yudao.module.erp.framework.seetong.config.SeetongProperties seetongProperties;
 
     @Override
     public List<ErpAgriStockBalanceRespVO> getStockBalanceReport(ErpAgriStockBalanceReqVO reqVO) {
@@ -85,5 +98,45 @@ public class ErpAgriReportServiceImpl implements ErpAgriReportService {
         vo.setFlowList(agriReportMapper.selectTodayFinanceFlowList(beginTime, endTime));
         
         return vo;
+    }
+
+    @Override
+    public List<ErpAgriRestrictedSaleRespVO> getRestrictedSaleLeaderboard() {
+        return agriReportMapper.selectRestrictedSaleLeaderboard();
+    }
+
+    @Override
+    public List<cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO> getSupplierLicenseCountdown() {
+        return agriReportMapper.selectSupplierLicenseCountdown();
+    }
+
+    @Override
+    public String getPlaybackUrl(Long bizId, String bizType, Integer preMinutes, Integer postMinutes) {
+        String cameraId = null;
+        LocalDateTime videoTime = null;
+
+        if ("sale_order".equals(bizType)) {
+            ErpSaleOrderDO order = saleOrderMapper.selectById(bizId);
+            if (order != null) {
+                cameraId = order.getCameraId();
+                videoTime = order.getVideoTime() != null ? order.getVideoTime() : order.getOrderTime();
+            }
+        } else if ("sale_out".equals(bizType)) {
+            ErpSaleOutDO outbound = saleOutMapper.selectById(bizId);
+            if (outbound != null) {
+                cameraId = outbound.getCameraId();
+                videoTime = outbound.getVideoTime() != null ? outbound.getVideoTime() : outbound.getOutTime();
+            }
+        }
+
+        if (cameraId == null || videoTime == null) {
+            return null;
+        }
+
+        // 使用传入参数或默认配置
+        int pre = preMinutes != null ? preMinutes : seetongProperties.getPreMinutes();
+        int post = postMinutes != null ? postMinutes : seetongProperties.getPostMinutes();
+
+        return seetongClient.getPlaybackUrl(cameraId, videoTime.minusMinutes(pre), videoTime.plusMinutes(post));
     }
 }

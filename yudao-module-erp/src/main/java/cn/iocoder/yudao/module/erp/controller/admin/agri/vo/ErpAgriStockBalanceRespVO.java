@@ -36,4 +36,19 @@ public class ErpAgriStockBalanceRespVO {
     @Schema(description = "期末库存数量", example = "150.00")
     private BigDecimal closingStock;
 
+    @Schema(description = "是否高毒限用")
+    private Boolean isRestricted;
+
+    @Schema(description = "登记证有效期")
+    private java.time.LocalDateTime registrationExpiryDate;
+
+    @Schema(description = "生产批次号", example = "B20240101")
+    private String batchNo;
+
+    @Schema(description = "生产日期")
+    private java.time.LocalDateTime productionDate;
+
+    @Schema(description = "有效截止日期")
+    private java.time.LocalDateTime expiryDate;
+
 }

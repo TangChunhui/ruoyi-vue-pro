@@ -45,4 +45,19 @@ public interface ErpAgriReportService {
      */
     cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO getAgriFinanceSummary();
 
+    /**
+     * 获取高毒限用农资采购排行（合规排查）
+     */
+    List<ErpAgriRestrictedSaleRespVO> getRestrictedSaleLeaderboard();
+
+    /**
+     * 获得供货商资质到期预警列表
+     */
+    List<cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO> getSupplierLicenseCountdown();
+
+    /**
+     * 获得监控回放地址
+     */
+    String getPlaybackUrl(Long bizId, String bizType, Integer preMinutes, Integer postMinutes);
+
 }

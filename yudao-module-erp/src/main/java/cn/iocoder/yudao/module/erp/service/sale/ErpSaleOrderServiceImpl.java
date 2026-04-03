@@ -2,6 +2,7 @@ package cn.iocoder.yudao.module.erp.service.sale;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.number.MoneyUtils;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
@@ -16,6 +17,7 @@ import cn.iocoder.yudao.module.erp.dal.redis.no.ErpNoRedisDAO;
 import cn.iocoder.yudao.module.erp.enums.ErpAuditStatus;
 import cn.iocoder.yudao.module.erp.service.finance.ErpAccountService;
 import cn.iocoder.yudao.module.erp.service.product.ErpProductService;
+import cn.iocoder.yudao.module.erp.service.agri.VideoStorageService;
 import cn.iocoder.yudao.module.system.api.user.AdminUserApi;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,6 +62,8 @@ public class ErpSaleOrderServiceImpl implements ErpSaleOrderService {
 
     @Resource
     private AdminUserApi adminUserApi;
+    @Resource
+    private VideoStorageService videoStorageService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -90,6 +94,11 @@ public class ErpSaleOrderServiceImpl implements ErpSaleOrderService {
         // 2.2 插入订单项
         saleOrderItems.forEach(o -> o.setOrderId(saleOrder.getId()));
         saleOrderItemMapper.insertBatch(saleOrderItems);
+
+        // 3. 触发视频抓取
+        videoStorageService.downloadAndStoreVideo(saleOrder.getId(), "sale_order",
+                saleOrder.getCameraId(), saleOrder.getVideoTime() != null ? saleOrder.getVideoTime() : saleOrder.getOrderTime());
+
         return saleOrder.getId();
     }
 
@@ -120,6 +129,12 @@ public class ErpSaleOrderServiceImpl implements ErpSaleOrderService {
         saleOrderMapper.updateById(updateObj);
         // 2.2 更新订单项
         updateSaleOrderItemList(updateReqVO.getId(), saleOrderItems);
+
+        // 3. 触发视频抓取 (如果 cameraId 存在)
+        if (StrUtil.isNotEmpty(updateObj.getCameraId())) {
+            videoStorageService.downloadAndStoreVideo(updateObj.getId(), "sale_order",
+                    updateObj.getCameraId(), updateObj.getVideoTime() != null ? updateObj.getVideoTime() : updateObj.getOrderTime());
+        }
     }
 
     private void calculateTotalPrice(ErpSaleOrderDO saleOrder, List<ErpSaleOrderItemDO> saleOrderItems) {

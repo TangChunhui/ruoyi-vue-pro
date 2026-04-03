@@ -99,6 +99,11 @@
             <el-input v-model="formData.buyerIdCard" placeholder="高毒农药必填" />
           </el-form-item>
         </el-col>
+        <el-col :span="8">
+          <el-form-item label="联通摄像头" prop="cameraId">
+            <el-input v-model="formData.cameraId" placeholder="监控设备 ID (如: counters_01)" />
+          </el-form-item>
+        </el-col>
         <el-col :span="16">
           <el-form-item label="备注" prop="remark">
             <el-input
@@ -219,6 +224,7 @@ const formData = ref({
   usageMethod: undefined,
   dosageAdvice: undefined,
   buyerIdCard: undefined,
+  cameraId: undefined,
   items: [],
   no: undefined // 订单单号，后端返回
 })

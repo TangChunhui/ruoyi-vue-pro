@@ -74,4 +74,25 @@ public class ErpAgriReportController {
         return success(agriReportService.getAgriFinanceSummary());
     }
 
+    @GetMapping("/restricted-sale-leaderboard")
+    @Operation(summary = "获取高毒限用农资采购排行（合规排查）")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO>> getRestrictedSaleLeaderboard() {
+        return success(agriReportService.getRestrictedSaleLeaderboard());
+    }
+
+    @GetMapping("/supplier-license-countdown")
+    @Operation(summary = "获得供货商资质到期预警列表")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO>> getSupplierLicenseCountdown() {
+        return success(agriReportService.getSupplierLicenseCountdown());
+    }
+
+    @GetMapping("/get-playback-url")
+    @Operation(summary = "获得监控回放地址")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<String> getPlaybackUrl(Long bizId, String bizType, Integer preMinutes, Integer postMinutes) {
+        return success(agriReportService.getPlaybackUrl(bizId, bizType, preMinutes, postMinutes));
+    }
+
 }

@@ -125,4 +125,19 @@ public class ErpSaleOutDO extends BaseDO {
      */
     private String remark;
 
+    // ========== Seetong 视频关联 ==========
+    /**
+     * 监控设备实时 ID
+     */
+    private String cameraId;
+    /**
+     * 联动视频时间（如果与业务时间不一致时使用）
+     */
+    private LocalDateTime videoTime;
+    /**
+     * 本地/云端存储地址
+     */
+    private String videoUrl;
+
+
 }

@@ -34,6 +34,8 @@ export interface SaleOrderVO {
   usageMethod: string // 施用方法
   dosageAdvice: string // 建议用量
   buyerIdCard: string // 购买人身份证（高毒限用必填）
+  cameraId: string // 监控设备 ID
+  videoUrl: string // 监控回放视频地址
   items: SaleOrderItemVO[] // 订单清单列表
 }
 

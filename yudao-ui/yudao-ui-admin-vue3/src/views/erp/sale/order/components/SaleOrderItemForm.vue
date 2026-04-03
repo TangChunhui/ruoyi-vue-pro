@@ -25,7 +25,17 @@
                 :key="item.id"
                 :label="item.name"
                 :value="item.id"
-              />
+              >
+                <span class="float-left">{{ item.name }}</span>
+                <el-tag
+                  v-if="item.isRestricted"
+                  type="danger"
+                  size="small"
+                  class="float-right mt-5px"
+                >
+                  限用
+                </el-tag>
+              </el-option>
             </el-select>
           </el-form-item>
         </template>
@@ -54,7 +64,25 @@
       <el-table-column label="生产批次" min-width="150">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.batchNo`" class="mb-0px!">
-            <el-input v-model="row.batchNo" placeholder="请输入批次号" />
+            <el-select
+              v-model="row.batchNo"
+              clearable
+              filterable
+              placeholder="选择批次"
+              @change="onChangeBatch($event, row)"
+            >
+              <el-option
+                v-for="batch in batchList[row.productId] || []"
+                :key="batch.batchNo"
+                :label="batch.batchNo"
+                :value="batch.batchNo"
+              >
+                <span style="float: left">{{ batch.batchNo }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px; margin-left: 10px">
+                  {{ dayjs(batch.expiryDate).format('YYYY-MM-DD') }}
+                </span>
+              </el-option>
+            </el-select>
           </el-form-item>
         </template>
       </el-table-column>
@@ -137,9 +165,7 @@
       <el-table-column label="税额" prop="taxPrice" fixed="right" min-width="120">
         <template #default="{ row, $index }">
           <el-form-item :prop="`${$index}.taxPrice`" class="mb-0px!">
-            <el-form-item :prop="`${$index}.taxPrice`" class="mb-0px!">
-              <el-input disabled v-model="row.taxPrice" :formatter="erpPriceInputFormatter" />
-            </el-form-item>
+            <el-input disabled v-model="row.taxPrice" :formatter="erpPriceInputFormatter" />
           </el-form-item>
         </template>
       </el-table-column>
@@ -177,6 +203,7 @@ import {
   erpPriceMultiply,
   getSumValue
 } from '@/utils'
+import dayjs from 'dayjs'
 
 const props = defineProps<{
   items: undefined
@@ -190,6 +217,7 @@ const formRules = reactive({
 })
 const formRef = ref([]) // 表单 Ref
 const productList = ref<ProductVO[]>([]) // 产品列表
+const batchList = ref<Record<number, any[]>>({}) // 批次列表，Key 为产品编号
 
 /** 初始化设置出库项 */
 watch(
@@ -277,8 +305,32 @@ const onChangeProduct = (productId, row) => {
     row.productBarCode = product.barCode
     row.productPrice = product.salePrice
   }
+  // 置空批次
+  row.batchNo = undefined
+  row.productionDate = undefined
+  row.expiryDate = undefined
   // 加载库存
   setStockCount(row)
+  // 加载批次
+  fetchBatches(productId)
+}
+
+/** 异步加载产品的批次列表 */
+const fetchBatches = async (productId: number) => {
+  if (!productId || batchList.value[productId]) return
+  const data = await StockApi.getStockList({ productId })
+  batchList.value[productId] = data
+}
+
+/** 处理批次变更 */
+const onChangeBatch = (batchNo, row) => {
+  const batches = batchList.value[row.productId]
+  if (!batches) return
+  const batch = batches.find((b) => b.batchNo === batchNo)
+  if (batch) {
+    row.productionDate = batch.productionDate
+    row.expiryDate = batch.expiryDate
+  }
 }
 
 /** 加载库存 */

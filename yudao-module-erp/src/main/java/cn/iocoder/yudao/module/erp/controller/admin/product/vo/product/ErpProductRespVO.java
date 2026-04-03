@@ -69,6 +69,10 @@ public class ErpProductRespVO {
     @ExcelProperty("最低价格，单位：元")
     private BigDecimal minPrice;
 
+    @Schema(description = "农药登记证号", example = "PD20150001")
+    @ExcelProperty("农药登记证号")
+    private String registrationNo;
+
     @Schema(description = "登记证有效期")
     @ExcelProperty("登记证有效期")
     private LocalDateTime registrationExpiryDate;

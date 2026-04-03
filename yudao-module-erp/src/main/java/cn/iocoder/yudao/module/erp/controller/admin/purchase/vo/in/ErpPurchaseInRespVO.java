@@ -128,6 +128,13 @@ public class ErpPurchaseInRespVO {
         @Schema(description = "备注", example = "随便")
         private String remark;
 
+        @Schema(description = "生产批次号", example = "B240315")
+        private String batchNo;
+        @Schema(description = "生产日期")
+        private LocalDateTime productionDate;
+        @Schema(description = "有效期至")
+        private LocalDateTime expiryDate;
+
         // ========== 关联字段 ==========
 
         @Schema(description = "产品名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "巧克力")

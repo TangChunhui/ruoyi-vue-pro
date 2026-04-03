@@ -29,7 +29,7 @@ export const StockApi = {
   },
 
   // 查询产品在特定仓库的批次库存列表
-  getStockList: async (params: { productId: number; warehouseId: number }) => {
+  getStockList: async (params: { productId: number; warehouseId?: number }) => {
     return await request.get({ url: `/erp/stock/list`, params })
   },
 
