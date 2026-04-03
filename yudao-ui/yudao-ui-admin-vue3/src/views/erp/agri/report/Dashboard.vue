@@ -173,7 +173,124 @@ const supplierWarnings = ref([])
 const loading = ref(true)
 const trendMode = ref('营收')
 
-// ... (existing computed/logic)
+const statCards = computed(() => [
+  {
+    title: '今日销售总额',
+    value: financeSummary.value.todaySales || 0,
+    unit: '元',
+    type: 'revenue',
+    icon: 'ep:money',
+    iconColor: '#03A9F4',
+    iconBg: '#e1f5fe',
+    trend: 12.5,
+    footerText: '较昨日'
+  },
+  {
+    title: '限用农药占比',
+    value: warningStats.value.restrictedSalePercent || 0,
+    unit: '%',
+    type: 'restricted',
+    icon: 'ep:warning',
+    iconColor: '#FF9800',
+    iconBg: '#fff3e0',
+    trend: -2.1,
+    footerText: '合规率达 98%'
+  },
+  {
+    title: '临期预警批次',
+    value: expiringList.value.length || 0,
+    unit: '个',
+    type: 'warning',
+    icon: 'ep:clock',
+    iconColor: '#E91E63',
+    iconBg: '#fce4ec',
+    trend: 0,
+    footerText: '建议优先处理'
+  },
+  {
+    title: '待收货款 (挂账)',
+    value: financeSummary.value.totalReceivable || 0,
+    unit: '元',
+    type: 'asset',
+    icon: 'ep:wallet',
+    iconColor: '#4CAF50',
+    iconBg: '#e8f5e9',
+    trend: 5.4,
+    footerText: '授信风控中'
+  }
+])
+
+const fastActions = [
+  {
+    name: '开具销售单',
+    desc: '农资销售与处方录入',
+    icon: 'ep:shopping-cart',
+    color: '#409EFF',
+    bg: '#ecf5ff',
+    route: 'ErpSaleOrder'
+  },
+  {
+    name: '入库登记',
+    desc: '采购入库与批次录入',
+    icon: 'ep:box',
+    color: '#67C23A',
+    bg: '#f0f9eb',
+    route: 'ErpPurchaseOrder'
+  },
+  {
+    name: '库存台账',
+    desc: '进销存收发全记录',
+    icon: 'ep:list',
+    color: '#E6A23C',
+    bg: '#fdf6ec',
+    route: 'AgriStockBalanceReport'
+  },
+  {
+    name: '视频中心',
+    desc: '监控调取与归档查看',
+    icon: 'ep:video-camera',
+    color: '#F56C6C',
+    bg: '#fef0f0',
+    route: 'ErpAgriDashboard'
+  }
+]
+
+const chartOptions = computed(() => ({
+  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+  tooltip: { trigger: 'axis' },
+  xAxis: {
+    type: 'category',
+    data: financeSummary.value.dailyStats?.map((i: any) => i.date) || [],
+    axisLine: { lineStyle: { color: '#eee' } },
+    axisLabel: { color: '#999' }
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { type: 'dashed', color: '#f5f5f5' } }
+  },
+  series: [
+    {
+      name: trendMode.value === '营收' ? '营收额' : '交易笔数',
+      type: 'line',
+      smooth: true,
+      data: trendMode.value === '营收' 
+        ? financeSummary.value.dailyStats?.map((i: any) => i.revenue) || []
+        : financeSummary.value.dailyStats?.map((i: any) => i.count) || [],
+      lineStyle: { width: 4, color: '#409EFF' },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(64,158,255,0.4)' },
+            { offset: 1, color: 'rgba(64,158,255,0.1)' }
+          ]
+        }
+      },
+      itemStyle: { color: '#409EFF', borderWidth: 2 }
+    }
+  ]
+}))
 
 /** 获取统计数据 */
 const fetchStats = async () => {

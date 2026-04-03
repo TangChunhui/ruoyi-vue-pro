@@ -63,6 +63,12 @@
                 <div class="detail">已累计销售: {{ batchData.totalOutCount || 0 }} {{ batchData.unitName }}</div>
                 <div class="detail" v-if="batchData.salesCount > 0">涉及销售单数: {{ batchData.salesCount }} 笔</div>
                 <div class="badge info" v-if="batchData.isRestricted">高毒限用管控</div>
+                
+                <!-- 联动视频回放 -->
+                <div v-if="batchData.hasVideo" class="mt-10px flex items-center cursor-pointer text-blue-500" @click="handlePlayVideo(batchData)">
+                  <Icon icon="ep:video-play" class="mr-4px" />
+                  <span class="text-12px font-bold">查看销售现场存证视频</span>
+                </div>
               </div>
             </template>
           </el-step>
@@ -73,6 +79,10 @@
               <div class="step-content">
                 <div class="detail">主要覆盖农户: {{ batchData.mainCustomerNames || '区域散户' }}</div>
                 <div class="detail text-gray-400 italic">点击查看下游明细台账...</div>
+                
+                <el-button type="primary" plain size="small" class="mt-8px" @click="handlePrintPrescription(batchData)">
+                   <Icon icon="ep:document" class="mr-4px" /> 下载合规处方单
+                </el-button>
               </div>
             </template>
           </el-step>
@@ -127,6 +137,18 @@ const open = (row: any) => {
 const fetchFullTrace = async (batchNo: string) => {
   // TODO: 后续对接后端明细接口
   console.log('Fetching trace for', batchNo)
+  // 模拟一些状态
+  batchData.value.hasVideo = true
+}
+
+const handlePlayVideo = (data: any) => {
+  // 联动全局视频播放逻辑，或者跳转到销售单视频
+  console.log('Playing video for batch', data.batchNo)
+}
+
+const handlePrintPrescription = (data: any) => {
+  // 联动打印逻辑
+  console.log('Printing prescription for batch', data.batchNo)
 }
 
 defineExpose({ open })
