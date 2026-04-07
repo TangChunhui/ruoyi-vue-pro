@@ -2,6 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.iocoder.yudao.module.erp.dal.mysql.agri.ErpAgriReportMapper">
 
+    <!-- 租户过滤公共片段（ERP 实体继承 BaseDO 而非 TenantBaseDO，MP 不会自动注入，需手动） -->
+    <sql id="tenantFilter">
+        <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+            AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+        </if>
+    </sql>
+
     <!--
       收发存台账核心逻辑（基于 erp_stock_record 流水表）：
       - 期初库存：统计区间开始时间之前，每个产品最近一条记录的 total_count
@@ -33,6 +40,7 @@
             SELECT DISTINCT product_id, batch_no AS batchNo, production_date AS productionDate, expiry_date AS expiryDate
             FROM erp_stock_record
             WHERE deleted = 0
+            <include refid="tenantFilter"/>
             <if test="req.warehouseId != null">
                 AND warehouse_id = #{req.warehouseId}
             </if>
@@ -48,6 +56,7 @@
                 SELECT product_id, batch_no, MAX(id) AS max_id
                 FROM erp_stock_record
                 WHERE deleted = 0
+                <include refid="tenantFilter"/>
                 <if test="req.beginTime != null">
                     AND create_time &lt; #{req.beginTime}
                 </if>
@@ -62,6 +71,7 @@
                 SUM(CASE WHEN count &lt; 0 THEN ABS(count) ELSE 0 END)     AS outboundStock
             FROM erp_stock_record
             WHERE deleted = 0
+            <include refid="tenantFilter"/>
             <if test="req.beginTime != null">
                 AND create_time &gt;= #{req.beginTime}
             </if>
@@ -74,6 +84,7 @@
             GROUP BY product_id, batch_no
         ) period ON period.product_id = combined.product_id AND IFNULL(period.batch_no, '') = IFNULL(combined.batchNo, '')
         WHERE p.deleted = 0
+        <include refid="tenantFilter"/>
         <if test="req.productId != null">
             AND p.id = #{req.productId}
         </if>
@@ -92,6 +103,7 @@
         WHERE deleted = 0
           AND registration_expiry_date IS NOT NULL
           AND registration_expiry_date BETWEEN #{now} AND #{future}
+          <include refid="tenantFilter"/>
     </select>
 
     <select id="selectExpiredSupplierCount" resultType="java.lang.Long">
@@ -99,6 +111,7 @@
         WHERE deleted = 0
           AND license_expiry_date IS NOT NULL
           AND license_expiry_date &lt; #{now}
+          <include refid="tenantFilter"/>
     </select>
 
     <select id="selectWarningCustomerCount" resultType="java.lang.Long">
@@ -106,6 +119,7 @@
         WHERE deleted = 0
           AND credit_limit > 0
           AND (current_debt / credit_limit) >= 0.8
+          <include refid="tenantFilter"/>
     </select>
 
     <select id="selectMonthlyRestrictedSaleCount" resultType="java.lang.Long">
@@ -116,6 +130,9 @@
         WHERE o.deleted = 0
           AND p.is_restricted = 1
           AND o.create_time >= #{startOfMonth}
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
     <select id="selectRestrictedSaleList"
@@ -146,6 +163,9 @@
         LEFT JOIN erp_product_unit u ON i.product_unit_id = u.id AND u.deleted = 0
         WHERE o.deleted = 0
           AND p.is_restricted = 1
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         <if test="req.beginTime != null">
             AND o.order_time &gt;= #{req.beginTime}
         </if>
@@ -188,6 +208,9 @@
         LEFT JOIN erp_customer c ON o.customer_id = c.id AND c.deleted = 0
         LEFT JOIN erp_product_unit u ON i.product_unit_id = u.id AND u.deleted = 0
         WHERE o.deleted = 0
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         <if test="req.beginTime != null">
             AND o.order_time &gt;= #{req.beginTime}
         </if>
@@ -231,6 +254,9 @@
           AND s.count > 0
           AND s.expiry_date IS NOT NULL
           AND s.expiry_date &lt;= DATE_ADD(NOW(), INTERVAL #{days} DAY)
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND s.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         ORDER BY s.expiry_date ASC
     </select>
 
@@ -239,6 +265,9 @@
         FROM erp_stock s
         INNER JOIN erp_product p ON s.product_id = p.id AND p.deleted = 0
         WHERE s.deleted = 0
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND s.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
     <select id="selectSalesAmount" resultType="java.math.BigDecimal">
@@ -246,6 +275,9 @@
         FROM erp_sale_order
         WHERE deleted = 0
           AND status = 20
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
           <if test="beginTime != null">
               AND order_time &gt;= #{beginTime}
           </if>
@@ -258,19 +290,29 @@
     <select id="selectReceiptAmount" resultType="java.math.BigDecimal">
         SELECT SUM(total_price) FROM erp_finance_receipt
         WHERE deleted = 0 AND status = 20
-        AND receipt_time BETWEEN #{beginTime} AND #{endTime}
+          AND receipt_time BETWEEN #{beginTime} AND #{endTime}
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
     <!-- 农资财务看板：今日支出 -->
     <select id="selectPaymentAmount" resultType="java.math.BigDecimal">
         SELECT SUM(total_price) FROM erp_finance_payment
         WHERE deleted = 0 AND status = 20
-        AND payment_time BETWEEN #{beginTime} AND #{endTime}
+          AND payment_time BETWEEN #{beginTime} AND #{endTime}
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
     <!-- 农资财务看板：当前总应收（农户欠款） -->
     <select id="selectTotalReceivableAmount" resultType="java.math.BigDecimal">
-        SELECT SUM(current_debt) FROM erp_customer WHERE deleted = 0
+        SELECT SUM(current_debt) FROM erp_customer
+        WHERE deleted = 0
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
     <!-- 收益今日流水（收款+付款） -->
@@ -279,13 +321,23 @@
          FROM erp_finance_receipt r
          LEFT JOIN erp_customer c ON r.customer_id = c.id
          LEFT JOIN erp_account a ON r.account_id = a.id
-         WHERE r.deleted = 0 AND r.status = 20 AND r.receipt_time BETWEEN #{beginTime} AND #{endTime})
+         WHERE r.deleted = 0 AND r.status = 20
+           AND r.receipt_time BETWEEN #{beginTime} AND #{endTime}
+           <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+               AND r.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+           </if>
+        )
         UNION ALL
         (SELECT 2 AS type, p.no AS no, s.name AS businessName, p.total_price AS amount, a.name AS accountName, p.payment_time AS time
          FROM erp_finance_payment p
          LEFT JOIN erp_supplier s ON p.supplier_id = s.id
          LEFT JOIN erp_account a ON p.account_id = a.id
-         WHERE p.deleted = 0 AND p.status = 20 AND p.payment_time BETWEEN #{beginTime} AND #{endTime})
+         WHERE p.deleted = 0 AND p.status = 20
+           AND p.payment_time BETWEEN #{beginTime} AND #{endTime}
+           <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+               AND p.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+           </if>
+        )
         ORDER BY time DESC
     </select>
 
@@ -302,6 +354,9 @@
         LEFT JOIN erp_customer c ON o.customer_id = c.id AND c.deleted = 0
         WHERE o.deleted = 0 AND o.status = 20
           AND p.is_restricted = 1
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         GROUP BY c.id, c.name
         ORDER BY count DESC
         LIMIT 10
@@ -332,6 +387,9 @@
         LEFT JOIN erp_supplier s ON o.supplier_id = s.id AND s.deleted = 0
         LEFT JOIN erp_product_unit u ON i.product_unit_id = u.id AND u.deleted = 0
         WHERE o.deleted = 0
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         <if test="req.beginTime != null">
             AND o.order_time &gt;= #{req.beginTime}
         </if>
@@ -361,6 +419,9 @@
         WHERE deleted = 0
           AND license_expiry_date IS NOT NULL
           AND license_expiry_date &lt;= DATE_ADD(NOW(), INTERVAL 90 DAY)
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         ORDER BY license_expiry_date ASC
     </select>
 
@@ -368,13 +429,16 @@
     <select id="selectDailySalesStats"
             resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO$DailyStat">
         SELECT
-            DATE_FORMAT(order_time, '%m-%d') AS date,
-            IFNULL(SUM(total_price), 0)       AS revenue,
-            COUNT(id)                          AS count
+            DATE_FORMAT(order_time, '%Y-%m-%d') AS date,
+            IFNULL(SUM(total_price), 0)          AS revenue,
+            COUNT(id)                             AS count
         FROM erp_sale_order
         WHERE deleted = 0
           AND status = 20
           AND order_time &gt;= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         GROUP BY DATE(order_time)
         ORDER BY DATE(order_time) ASC
     </select>
@@ -404,11 +468,14 @@
             SELECT
                 poi.product_id,
                 poi.batch_no,
-                SUM(poi.count)          AS totalInCount,
+                SUM(poi.count)           AS totalInCount,
                 MAX(poi.production_date) AS productionDate,
                 MAX(poi.expiry_date)     AS expiryDate
             FROM erp_purchase_order_items poi
             INNER JOIN erp_purchase_order po ON po.id = poi.order_id AND po.deleted = 0
+                <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+                    AND po.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+                </if>
             WHERE poi.deleted = 0
               AND poi.product_id = #{productId}
               AND (#{batchNo} IS NULL OR #{batchNo} = '' OR poi.batch_no = #{batchNo})
@@ -424,14 +491,23 @@
                 AND (#{batchNo} IS NULL OR #{batchNo} = '' OR poi2.batch_no = #{batchNo})
             LEFT JOIN erp_supplier s ON s.id = po2.supplier_id AND s.deleted = 0
             WHERE po2.deleted = 0
+              <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+                  AND po2.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+              </if>
             ORDER BY po2.order_time ASC
             LIMIT 1
         ) first_in ON 1 = 1
         /* 当前库存（取第一条批次库存记录） */
         LEFT JOIN erp_stock stock ON stock.product_id = p.id AND stock.deleted = 0
             AND (#{batchNo} IS NULL OR #{batchNo} = '' OR stock.batch_no = #{batchNo})
+            <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+                AND stock.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+            </if>
         LEFT JOIN erp_warehouse w ON w.id = stock.warehouse_id AND w.deleted = 0
         WHERE p.deleted = 0 AND p.id = #{productId}
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND p.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
         LIMIT 1
     </select>
 
@@ -448,6 +524,9 @@
             AND (#{batchNo} = '' OR i.batch_no = #{batchNo})
         LEFT JOIN erp_customer c ON c.id = o.customer_id AND c.deleted = 0
         WHERE o.deleted = 0
+          <if test="@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId() != null">
+              AND o.tenant_id = ${@cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder@getTenantId()}
+          </if>
     </select>
 
 </mapper>
