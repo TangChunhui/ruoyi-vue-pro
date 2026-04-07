@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -105,7 +106,7 @@ public class ErpSaleOrderController {
         Map<Long, ErpProductRespVO> productMap = productService.getProductVOMap(
                 convertSet(saleOrderItemList, ErpSaleOrderItemDO::getProductId));
         Map<Long, ErpCustomerDO> customerMap = customerService.getCustomerMap(
-                convertSet(List.of(saleOrder), ErpSaleOrderDO::getCustomerId));
+                convertSet(Collections.singletonList(saleOrder), ErpSaleOrderDO::getCustomerId));
         return success(BeanUtils.toBean(saleOrder, ErpSaleOrderRespVO.class, saleOrderVO -> {
             saleOrderVO.setItems(BeanUtils.toBean(saleOrderItemList, ErpSaleOrderRespVO.Item.class, item -> {
                 BigDecimal stockCount = stockService.getStockCount(item.getProductId());

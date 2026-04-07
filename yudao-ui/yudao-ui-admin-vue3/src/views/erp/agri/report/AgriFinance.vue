@@ -113,6 +113,66 @@
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 近15日销售趋势 -->
+    <el-card v-if="dailyStats.length > 0" shadow="never" class="mt-20px">
+      <template #header>
+        <div class="flex items-center">
+          <Icon icon="ep:trend-charts" class="mr-8px" />
+          <span class="font-bold">近{{ dailyStats.length }}日销售趋势</span>
+          <span class="ml-auto text-12px text-gray-400">蓝色柱为今日</span>
+        </div>
+      </template>
+      <div class="flex gap-20px">
+        <!-- 左侧统计 -->
+        <div class="flex flex-col justify-center gap-20px min-w-120px">
+          <div class="text-center">
+            <div class="text-12px text-gray-400">近期总销售</div>
+            <div class="text-18px font-bold text-blue-600 mt-4px">
+              ¥{{ erpPriceInputFormatter(dailyStats.reduce((s, i) => s + (i.revenue || 0), 0)) }}
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-12px text-gray-400">近期总笔数</div>
+            <div class="text-18px font-bold text-green-600 mt-4px">
+              {{ dailyStats.reduce((s, i) => s + (i.count || 0), 0) }} 笔
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="text-12px text-gray-400">日均销售</div>
+            <div class="text-18px font-bold text-orange-500 mt-4px">
+              ¥{{ erpPriceInputFormatter(dailyStats.reduce((s, i) => s + (i.revenue || 0), 0) / dailyStats.length) }}
+            </div>
+          </div>
+        </div>
+        <!-- 柱状图 -->
+        <div class="flex-1 overflow-x-auto">
+          <div class="flex items-end gap-6px min-w-400px" style="height: 160px;">
+            <div
+              v-for="(item, index) in dailyStats"
+              :key="index"
+              class="flex flex-col items-center flex-1"
+            >
+              <span class="text-10px text-gray-400 mb-4px">
+                {{ item.revenue >= 1000 ? ((item.revenue / 1000).toFixed(1) + 'k') : item.revenue || '' }}
+              </span>
+              <div
+                class="w-full rounded-t-4px transition-all cursor-pointer"
+                :class="item.date === todayStr ? 'bg-blue-500' : 'bg-blue-200'"
+                :style="{ height: getBarHeight(item.revenue) + 'px' }"
+                :title="`${item.date}: ¥${item.revenue} (${item.count}笔)`"
+              />
+              <span
+                class="text-10px mt-4px"
+                :class="item.date === todayStr ? 'text-blue-600 font-bold' : 'text-gray-400'"
+              >
+                {{ item.date.slice(5) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -120,6 +180,7 @@
 import { AgriReportApi } from '@/api/erp/agri/report'
 import { erpPriceInputFormatter } from '@/utils'
 import { dateFormatter } from '@/utils/formatTime'
+import dayjs from 'dayjs'
 
 /** 农资财务概览 */
 defineOptions({ name: 'AgriFinance' })
@@ -133,8 +194,25 @@ const summary = ref<any>({
   todayPaymentAmount: 0,
   todayNetCashFlow: 0,
   todaySalesAmount: 0,
-  flowList: []
+  flowList: [],
+  dailyStats: [],
 })
+
+const todayStr = dayjs().format('YYYY-MM-DD')
+
+const dailyStats = computed(() => summary.value.dailyStats || [])
+
+const chartMax = computed(() => {
+  const max = Math.max(...dailyStats.value.map((i: any) => i.revenue || 0), 1)
+  return Math.ceil(max / 100) * 100
+})
+
+const CHART_MAX_PX = 120 // px
+
+function getBarHeight(revenue: number): number {
+  if (!chartMax.value) return 2
+  return Math.max(2, Math.round((revenue / chartMax.value) * CHART_MAX_PX))
+}
 
 const fetchSummary = async () => {
   loading.value = true
