@@ -1,6 +1,4 @@
 <template>
-  <doc-alert title="【销售】销售订单、出库、退货" url="https://doc.iocoder.cn/erp/sale/" />
-
   <ContentWrap>
     <!-- 搜索工作栏 -->
     <el-form
@@ -8,15 +6,15 @@
       :model="queryParams"
       ref="queryFormRef"
       :inline="true"
-      label-width="68px"
+      label-width="80px"
     >
-      <el-form-item label="名称" prop="name">
+      <el-form-item :label="isFarmerMode ? '农户姓名' : '名称'" prop="name">
         <el-input
           v-model="queryParams.name"
-          placeholder="请输入名称"
+          :placeholder="isFarmerMode ? '请输入农户姓名' : '请输入名称'"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-200px"
         />
       </el-form-item>
       <el-form-item label="手机号码" prop="mobile">
@@ -25,16 +23,16 @@
           placeholder="请输入手机号码"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-200px"
         />
       </el-form-item>
-      <el-form-item label="联系电话" prop="telephone">
+      <el-form-item v-if="isFarmerMode" label="主要作物" prop="mainCrops">
         <el-input
-          v-model="queryParams.telephone"
-          placeholder="请输入联系电话"
+          v-model="queryParams.mainCrops"
+          placeholder="请输入主要作物"
           clearable
           @keyup.enter="handleQuery"
-          class="!w-240px"
+          class="!w-200px"
         />
       </el-form-item>
       <el-form-item>
@@ -46,7 +44,7 @@
           @click="openForm('create')"
           v-hasPermi="['erp:customer:create']"
         >
-          <Icon icon="ep:plus" class="mr-5px" /> 新增
+          <Icon icon="ep:plus" class="mr-5px" /> {{ isFarmerMode ? '新增农户' : '新增' }}
         </el-button>
         <el-button
           type="success"
@@ -64,19 +62,71 @@
   <!-- 列表 -->
   <ContentWrap>
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
-      <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="联系人" align="center" prop="contact" />
-      <el-table-column label="手机号码" align="center" prop="mobile" />
-      <el-table-column label="联系电话" align="center" prop="telephone" />
-      <el-table-column label="电子邮箱" align="center" prop="email" />
-      <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="排序" align="center" prop="sort" />
-      <el-table-column label="状态" align="center" prop="status">
+      <!-- ===== 农户模式列 ===== -->
+      <template v-if="isFarmerMode">
+        <el-table-column label="农户姓名" align="center" prop="name" min-width="100" />
+        <el-table-column label="手机号码" align="center" prop="mobile" width="130" />
+        <el-table-column label="联系人" align="center" prop="contact" width="100" />
+        <el-table-column label="种植面积(亩)" align="center" prop="landArea" width="120">
+          <template #default="{ row }">
+            {{ row.landArea != null ? row.landArea : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="主要作物" align="center" prop="mainCrops" min-width="120">
+          <template #default="{ row }">{{ row.mainCrops || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="信用额度" align="center" prop="creditLimit" width="120">
+          <template #default="{ row }">
+            <span>{{ row.creditLimit != null ? '¥' + row.creditLimit.toFixed(2) : '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="当前欠款" align="center" prop="currentDebt" width="120">
+          <template #default="{ row }">
+            <span :class="row.currentDebt > 0 ? 'text-red-500 font-bold' : ''">
+              {{ row.currentDebt != null ? '¥' + row.currentDebt.toFixed(2) : '-' }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="欠款预警" align="center" width="100">
+          <template #default="{ row }">
+            <el-tag
+              v-if="row.creditLimit > 0 && row.currentDebt >= row.creditLimit"
+              type="danger"
+              size="small"
+            >超额</el-tag>
+            <el-tag
+              v-else-if="row.creditLimit > 0 && row.currentDebt >= row.creditLimit * 0.8"
+              type="warning"
+              size="small"
+            >临近</el-tag>
+            <el-tag v-else type="success" size="small">正常</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="地址" align="center" prop="address" min-width="150">
+          <template #default="{ row }">{{ row.address || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="备注" align="center" prop="remark" min-width="120">
+          <template #default="{ row }">{{ row.remark || '-' }}</template>
+        </el-table-column>
+      </template>
+
+      <!-- ===== 普通客户模式列 ===== -->
+      <template v-else>
+        <el-table-column label="名称" align="center" prop="name" />
+        <el-table-column label="联系人" align="center" prop="contact" />
+        <el-table-column label="手机号码" align="center" prop="mobile" />
+        <el-table-column label="联系电话" align="center" prop="telephone" />
+        <el-table-column label="电子邮箱" align="center" prop="email" />
+        <el-table-column label="备注" align="center" prop="remark" />
+        <el-table-column label="排序" align="center" prop="sort" />
+      </template>
+
+      <el-table-column label="状态" align="center" prop="status" width="80">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center">
+      <el-table-column label="操作" align="center" fixed="right" width="130">
         <template #default="scope">
           <el-button
             link
@@ -112,29 +162,33 @@
 
 <script setup lang="ts">
 import { DICT_TYPE } from '@/utils/dict'
-import { dateFormatter } from '@/utils/formatTime'
 import download from '@/utils/download'
 import { CustomerApi, CustomerVO } from '@/api/erp/sale/customer'
 import CustomerForm from './CustomerForm.vue'
+import { useRoute } from 'vue-router'
 
-/** ERP 客户 列表 */
+/** ERP 客户 / 农户管理 列表 */
 defineOptions({ name: 'ErpCustomer' })
 
-const message = useMessage() // 消息弹窗
-const { t } = useI18n() // 国际化
+const route = useRoute()
+const isFarmerMode = computed(() => route.path.includes('farmer'))
 
-const loading = ref(true) // 列表的加载中
-const list = ref<CustomerVO[]>([]) // 列表的数据
-const total = ref(0) // 列表的总页数
+const message = useMessage()
+const { t } = useI18n()
+
+const loading = ref(true)
+const list = ref<CustomerVO[]>([])
+const total = ref(0)
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   name: undefined,
   mobile: undefined,
-  telephone: undefined
+  telephone: undefined,
+  mainCrops: undefined
 })
-const queryFormRef = ref() // 搜索的表单
-const exportLoading = ref(false) // 导出的加载中
+const queryFormRef = ref()
+const exportLoading = ref(false)
 
 /** 查询列表 */
 const getList = async () => {
@@ -148,53 +202,42 @@ const getList = async () => {
   }
 }
 
-/** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.pageNo = 1
   getList()
 }
 
-/** 重置按钮操作 */
 const resetQuery = () => {
   queryFormRef.value.resetFields()
   handleQuery()
 }
 
-/** 添加/修改操作 */
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
 }
 
-/** 删除按钮操作 */
 const handleDelete = async (id: number) => {
   try {
-    // 删除的二次确认
     await message.delConfirm()
-    // 发起删除
     await CustomerApi.deleteCustomer(id)
     message.success(t('common.delSuccess'))
-    // 刷新列表
     await getList()
   } catch {}
 }
 
-/** 导出按钮操作 */
 const handleExport = async () => {
   try {
-    // 导出的二次确认
     await message.exportConfirm()
-    // 发起导出
     exportLoading.value = true
     const data = await CustomerApi.exportCustomer(queryParams)
-    download.excel(data, '客户.xls')
+    download.excel(data, isFarmerMode.value ? '农户.xls' : '客户.xls')
   } catch {
   } finally {
     exportLoading.value = false
   }
 }
 
-/** 初始化 **/
 onMounted(() => {
   getList()
 })

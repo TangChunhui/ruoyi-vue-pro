@@ -68,4 +68,7 @@ public class ProductSaveReqVO {
     @Schema(description = "标准亩用量", example = "50.00")
     private BigDecimal standardDosagePerMu;
 
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）", example = "1")
+    private Integer agriType;
+
 }

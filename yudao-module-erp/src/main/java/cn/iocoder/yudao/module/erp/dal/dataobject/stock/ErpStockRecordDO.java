@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @TableName("erp_stock_record")
 @KeySequence("erp_stock_record_seq")
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @ToString(callSuper = true)
 @Builder
 @NoArgsConstructor

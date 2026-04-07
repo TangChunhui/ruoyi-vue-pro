@@ -89,6 +89,10 @@ public class ErpCustomerDO extends BaseDO {
 
     // ========== 农资扩展信息 ==========
     /**
+     * 地址
+     */
+    private String address;
+    /**
      * 种植面积（亩）
      */
     private BigDecimal landArea;

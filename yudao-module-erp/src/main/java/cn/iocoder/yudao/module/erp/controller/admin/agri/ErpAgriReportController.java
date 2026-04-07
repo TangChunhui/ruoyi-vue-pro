@@ -1,11 +1,13 @@
 package cn.iocoder.yudao.module.erp.controller.admin.agri;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOverviewRespVO;
 import cn.iocoder.yudao.module.erp.service.agri.ErpAgriReportService;
+import cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -93,6 +95,20 @@ public class ErpAgriReportController {
     @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
     public CommonResult<String> getPlaybackUrl(Long bizId, String bizType, Integer preMinutes, Integer postMinutes) {
         return success(agriReportService.getPlaybackUrl(bizId, bizType, preMinutes, postMinutes));
+    }
+
+    @GetMapping("/seetong-devices")
+    @Operation(summary = "获得 Seetong 摄像头设备列表")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<SeetongClient.DeviceVO>> getSeetongDeviceList() {
+        return success(agriReportService.getSeetongDeviceList());
+    }
+
+    @GetMapping("/purchase-ledger-list")
+    @Operation(summary = "获得农资购进台账列表")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<List<ErpAgriPurchaseLedgerRespVO>> getPurchaseLedgerList(@Valid ErpAgriStockBalanceReqVO reqVO) {
+        return success(agriReportService.getPurchaseLedgerList(reqVO));
     }
 
 }

@@ -35,4 +35,10 @@ public class ErpAgriStockBalanceReqVO {
     @Schema(description = "客户编号", example = "1")
     private Long customerId;
 
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）", example = "1")
+    private Integer agriType;
+
+    @Schema(description = "产品名称关键字")
+    private String keyword;
+
 }

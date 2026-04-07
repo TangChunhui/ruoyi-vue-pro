@@ -100,8 +100,22 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="联通摄像头" prop="cameraId">
-            <el-input v-model="formData.cameraId" placeholder="监控设备 ID (如: counters_01)" />
+          <el-form-item label="监控摄像头" prop="cameraId">
+            <el-select
+              v-model="formData.cameraId"
+              clearable
+              filterable
+              allow-create
+              placeholder="选择或输入摄像头ID"
+              class="!w-1/1"
+            >
+              <el-option
+                v-for="d in deviceList"
+                :key="d.deviceId"
+                :label="`${d.deviceName}${d.channelName ? ' - ' + d.channelName : ''}`"
+                :value="d.deviceId"
+              />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="16">
@@ -197,6 +211,7 @@ import { CustomerApi, CustomerVO } from '@/api/erp/sale/customer'
 import { AccountApi, AccountVO } from '@/api/erp/finance/account'
 import { erpPriceInputFormatter, erpPriceMultiply } from '@/utils'
 import * as UserApi from '@/api/system/user'
+import { AgriReportApi } from '@/api/erp/agri/report'
 
 /** ERP 销售订单表单 */
 defineOptions({ name: 'SaleOrderForm' })
@@ -249,6 +264,7 @@ const formRef = ref() // 表单 Ref
 const customerList = ref<CustomerVO[]>([]) // 客户列表
 const accountList = ref<AccountVO[]>([]) // 账户列表
 const userList = ref<UserApi.UserVO[]>([]) // 用户列表
+const deviceList = ref<any[]>([]) // 摄像头设备列表
 
 /** 农资授信监控 */
 const selectedCustomer = computed(() => customerList.value.find(c => c.id === formData.value.customerId))
@@ -303,6 +319,12 @@ const open = async (type: string, id?: number) => {
   if (defaultAccount) {
     formData.value.accountId = defaultAccount.id
   }
+  // 加载摄像头设备列表（忽略失败，Seetong 可能未配置）
+  try {
+    deviceList.value = (await AgriReportApi.getSeetongDevices()) || []
+  } catch {
+    deviceList.value = []
+  }
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
@@ -353,6 +375,7 @@ const resetForm = () => {
     usageMethod: undefined,
     dosageAdvice: undefined,
     buyerIdCard: undefined,
+    cameraId: undefined,
     items: []
   }
   formRef.value?.resetFields()

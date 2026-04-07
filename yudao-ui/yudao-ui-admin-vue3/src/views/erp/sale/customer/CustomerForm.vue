@@ -4,18 +4,14 @@
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="100px"
+      label-width="110px"
       v-loading="formLoading"
     >
       <el-row :gutter="20">
+        <!-- 基础信息 -->
         <el-col :span="12">
-          <el-form-item label="名称" prop="name">
-            <el-input v-model="formData.name" placeholder="请输入名称" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="联系人" prop="contact">
-            <el-input v-model="formData.contact" placeholder="请输入联系人" />
+          <el-form-item :label="isFarmerMode ? '农户姓名' : '客户名称'" prop="name">
+            <el-input v-model="formData.name" :placeholder="isFarmerMode ? '请输入农户姓名' : '请输入客户名称'" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -24,20 +20,115 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item label="联系人" prop="contact">
+            <el-input v-model="formData.contact" placeholder="请输入联系人" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item label="联系电话" prop="telephone">
             <el-input v-model="formData.telephone" placeholder="请输入联系电话" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="电子邮箱" prop="email">
-            <el-input v-model="formData.email" placeholder="请输入电子邮箱" />
-          </el-form-item>
+
+        <!-- 农户扩展信息 -->
+        <template v-if="isFarmerMode">
+          <el-col :span="24">
+            <el-form-item label="地址" prop="address">
+              <el-input v-model="formData.address" placeholder="请输入详细地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-divider content-position="left">农业信息</el-divider>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="种植面积(亩)" prop="landArea">
+              <el-input-number v-model="formData.landArea" :min="0" :precision="2" class="!w-full" placeholder="请输入种植面积" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="主要作物" prop="mainCrops">
+              <el-input v-model="formData.mainCrops" placeholder="如：水稻、小麦、玉米" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-divider content-position="left">信用信息</el-divider>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="信用额度(元)" prop="creditLimit">
+              <el-input-number v-model="formData.creditLimit" :min="0" :precision="2" class="!w-full" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="当前欠款(元)">
+              <el-input-number v-model="formData.currentDebt" disabled :precision="2" class="!w-full" />
+              <div v-if="formData.currentDebt > 0" class="text-red-500 text-12px mt-4px">
+                <Icon icon="ep:warning" /> 该农户存在欠款
+              </div>
+            </el-form-item>
+          </el-col>
+        </template>
+
+        <!-- 其他信息（普通客户或农户高级信息） -->
+        <el-col :span="24">
+          <el-divider content-position="left">{{ isFarmerMode ? '其他信息' : '企业信息' }}</el-divider>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="传真" prop="fax">
-            <el-input v-model="formData.fax" placeholder="请输入传真" />
-          </el-form-item>
-        </el-col>
+        <template v-if="!isFarmerMode">
+          <el-col :span="12">
+            <el-form-item label="电子邮箱" prop="email">
+              <el-input v-model="formData.email" placeholder="请输入电子邮箱" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="传真" prop="fax">
+              <el-input v-model="formData.fax" placeholder="请输入传真" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="纳税人识别号" prop="taxNo">
+              <el-input v-model="formData.taxNo" placeholder="请输入纳税人识别号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="税率(%)" prop="taxPercent">
+              <el-input-number v-model="formData.taxPercent" :min="0" :precision="2" placeholder="请输入税率" class="!w-full" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="开户行" prop="bankName">
+              <el-input v-model="formData.bankName" placeholder="请输入开户行" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="开户账号" prop="bankAccount">
+              <el-input v-model="formData.bankAccount" placeholder="请输入开户账号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="开户地址" prop="bankAddress">
+              <el-input v-model="formData.bankAddress" placeholder="请输入开户地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="种植面积(亩)" prop="landArea">
+              <el-input-number v-model="formData.landArea" :min="0" :precision="2" class="!w-full" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="主要作物" prop="mainCrops">
+              <el-input v-model="formData.mainCrops" placeholder="请输入主要作物" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="信用额度" prop="creditLimit">
+              <el-input-number v-model="formData.creditLimit" :min="0" :precision="2" class="!w-full" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="当前欠款">
+              <el-input-number v-model="formData.currentDebt" disabled :precision="2" class="!w-full" />
+            </el-form-item>
+          </el-col>
+        </template>
         <el-col :span="12">
           <el-form-item label="开启状态" prop="status">
             <el-radio-group v-model="formData.status">
@@ -51,69 +142,9 @@
             </el-radio-group>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col v-if="!isFarmerMode" :span="12">
           <el-form-item label="排序" prop="sort">
-            <el-input-number
-              v-model="formData.sort"
-              placeholder="请输入排序"
-              class="!w-1/1"
-              :precision="0"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="纳税人识别号" prop="taxNo">
-            <el-input v-model="formData.taxNo" placeholder="请输入纳税人识别号" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="税率(%)" prop="taxPercent">
-            <el-input-number
-              v-model="formData.taxPercent"
-              :min="0"
-              :precision="2"
-              placeholder="请输入税率"
-              class="!w-1/1"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="开户行" prop="bankName">
-            <el-input v-model="formData.bankName" placeholder="请输入开户行" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="开户账号" prop="bankAccount">
-            <el-input v-model="formData.bankAccount" placeholder="请输入开户账号" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="开户地址" prop="bankAddress">
-            <el-input v-model="formData.bankAddress" placeholder="请输入开户地址" />
-          </el-form-item>
-        </el-col>
-        </el-col>
-        <el-col :span="24">
-          <el-divider content-position="left">农资扩展信息</el-divider>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="种植面积(亩)" prop="landArea">
-            <el-input-number v-model="formData.landArea" :min="0" :precision="2" class="!w-1/1" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="主要作物" prop="mainCrops">
-            <el-input v-model="formData.mainCrops" placeholder="请输入主要作物" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="信用额度" prop="creditLimit">
-            <el-input-number v-model="formData.creditLimit" :min="0" :precision="2" class="!w-1/1" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="当前欠款" prop="currentDebt">
-            <el-input-number v-model="formData.currentDebt" disabled :precision="2" class="!w-1/1" />
+            <el-input-number v-model="formData.sort" placeholder="请输入排序" class="!w-full" :precision="0" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -129,21 +160,26 @@
     </template>
   </Dialog>
 </template>
+
 <script setup lang="ts">
 import { getIntDictOptions, DICT_TYPE } from '@/utils/dict'
 import { CustomerApi, CustomerVO } from '@/api/erp/sale/customer'
 import { CommonStatusEnum } from '@/utils/constants'
+import { useRoute } from 'vue-router'
 
-/** ERP 客户 表单 */
+/** ERP 客户 / 农户 表单 */
 defineOptions({ name: 'CustomerForm' })
 
-const { t } = useI18n() // 国际化
-const message = useMessage() // 消息弹窗
+const route = useRoute()
+const isFarmerMode = computed(() => route.path.includes('farmer'))
 
-const dialogVisible = ref(false) // 弹窗的是否展示
-const dialogTitle = ref('') // 弹窗的标题
-const formLoading = ref(false) // 表单的加载中：1）修改时的数据加载；2）提交的按钮禁用
-const formType = ref('') // 表单的类型：create - 新增；update - 修改
+const { t } = useI18n()
+const message = useMessage()
+
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const formLoading = ref(false)
+const formType = ref('')
 const formData = ref({
   id: undefined,
   name: undefined,
@@ -160,17 +196,17 @@ const formData = ref({
   bankName: undefined,
   bankAccount: undefined,
   bankAddress: undefined,
+  address: undefined,
   landArea: undefined,
   mainCrops: undefined,
   creditLimit: undefined,
   currentDebt: undefined
 })
 const formRules = reactive({
-  name: [{ required: true, message: '客户名称不能为空', trigger: 'blur' }],
-  status: [{ required: true, message: '开启状态不能为空', trigger: 'blur' }],
-  sort: [{ required: true, message: '排序不能为空', trigger: 'blur' }]
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
+  status: [{ required: true, message: '开启状态不能为空', trigger: 'blur' }]
 })
-const formRef = ref() // 表单 Ref
+const formRef = ref()
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -178,7 +214,6 @@ const open = async (type: string, id?: number) => {
   dialogTitle.value = t('action.' + type)
   formType.value = type
   resetForm()
-  // 修改时，设置数据
   if (id) {
     formLoading.value = true
     try {
@@ -188,14 +223,12 @@ const open = async (type: string, id?: number) => {
     }
   }
 }
-defineExpose({ open }) // 提供 open 方法，用于打开弹窗
+defineExpose({ open })
 
 /** 提交表单 */
-const emit = defineEmits(['success']) // 定义 success 事件，用于操作成功后的回调
+const emit = defineEmits(['success'])
 const submitForm = async () => {
-  // 校验表单
   await formRef.value.validate()
-  // 提交请求
   formLoading.value = true
   try {
     const data = formData.value as unknown as CustomerVO
@@ -207,7 +240,6 @@ const submitForm = async () => {
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
-    // 发送操作成功的事件
     emit('success')
   } finally {
     formLoading.value = false
@@ -226,16 +258,17 @@ const resetForm = () => {
     fax: undefined,
     remark: undefined,
     status: CommonStatusEnum.ENABLE,
-    sort: undefined,
+    sort: 0,
     taxNo: undefined,
     taxPercent: undefined,
     bankName: undefined,
     bankAccount: undefined,
     bankAddress: undefined,
+    address: undefined,
     landArea: undefined,
     mainCrops: undefined,
-    creditLimit: undefined,
-    currentDebt: undefined
+    creditLimit: 0,
+    currentDebt: 0
   }
   formRef.value?.resetFields()
 }

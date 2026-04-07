@@ -59,6 +59,9 @@ public class ErpCustomerSaveReqVO {
     private String bankAddress;
 
     // ========== 农资扩展信息 ==========
+    @Schema(description = "地址", example = "湖南省长沙市望城区")
+    private String address;
+
     @Schema(description = "种植面积（亩）", example = "100.00")
     private BigDecimal landArea;
 

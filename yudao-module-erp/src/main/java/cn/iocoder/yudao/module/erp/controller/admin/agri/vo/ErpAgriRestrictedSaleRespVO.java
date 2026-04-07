@@ -51,4 +51,16 @@ public class ErpAgriRestrictedSaleRespVO {
     @Schema(description = "建议用量", example = "每亩50ml")
     private String dosageAdvice;
 
+    @Schema(description = "销售金额")
+    private java.math.BigDecimal totalPrice;
+
+    @Schema(description = "产品单价")
+    private java.math.BigDecimal productPrice;
+
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）")
+    private Integer agriType;
+
+    @Schema(description = "是否高毒限用")
+    private Integer isRestricted;
+
 }

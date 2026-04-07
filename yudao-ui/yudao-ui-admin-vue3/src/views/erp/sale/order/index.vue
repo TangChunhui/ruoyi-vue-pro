@@ -183,7 +183,7 @@
           <div v-for="item in scope.row.items" :key="item.id" class="text-12px mb-2px">
             <el-tag size="small" type="info" class="mr-4px">{{ item.productName }}</el-tag>
             <span v-if="item.batchNo" class="text-gray-400">批次: {{ item.batchNo }}</span>
-            <span class="ml-4px">x{{ erpCountTableColumnFormatter(null, null, item.count) }}</span>
+            <span class="ml-4px">x{{ erpCountTableColumnFormatter(null, null, item.count, 0) }}</span>
           </div>
         </template>
       </el-table-column>
@@ -489,7 +489,7 @@ const currentCameraId = ref('')
 const currentOrderTime = ref('')
 const handlePlayVideo = async (row: SaleOrderVO) => {
   currentCameraId.value = row.cameraId
-  currentOrderTime.value = dateFormatter(null, null, row.orderTime)
+  currentOrderTime.value = dateFormatter(null as any, null as any, row.orderTime)
   videoUrl.value = ''
   videoVisible.value = true
   try {

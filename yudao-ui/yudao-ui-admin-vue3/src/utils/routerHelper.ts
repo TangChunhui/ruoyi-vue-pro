@@ -88,8 +88,13 @@ export const generateRoute = (routes: AppCustomRouteRecordRaw[]): AppRouteRecord
     // 2. 生成 data（AppRouteRecordRaw）
     // 路由地址转首字母大写驼峰，作为路由名称，适配keepAlive
     let data: AppRouteRecordRaw = {
-      path:
-        route.path.indexOf('?') > -1 && !isUrl(route.path) ? route.path.split('?')[0] : route.path, // 注意，需要排除 http 这种 url，避免它带 ? 参数被截取掉
+      path: (() => {
+        if (isUrl(route.path)) return route.path
+        const base = route.path.indexOf('?') > -1 ? route.path.split('?')[0] : route.path
+        // 只对顶级路由 (parentId=0) 补全前导斜杠，子路由保持相对路径
+        if (route.parentId === 0 && !base.startsWith('/')) return '/' + base
+        return base
+      })(),
       name:
         route.componentName && route.componentName.length > 0
           ? route.componentName

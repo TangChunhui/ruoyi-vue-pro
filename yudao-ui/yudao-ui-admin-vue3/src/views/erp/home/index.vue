@@ -1,11 +1,11 @@
 <template>
-  <doc-alert title="ERP 手册（功能开启）" url="https://doc.iocoder.cn/erp/build/" />
+  <doc-alert title="农资经营管理系统 - 数字化台账指南" url="https://doc.iocoder.cn/erp/build/" />
 
   <div class="flex flex-col">
     <!-- 销售/采购的全局统计 -->
     <el-row :gutter="16" class="row">
       <el-col :md="6" :sm="12" :xs="24" :loading="loading">
-        <SummaryCard title="今日销售" :value="saleSummary?.todayPrice" />
+        <SummaryCard title="今日收银" :value="saleSummary?.todayPrice" />
       </el-col>
       <el-col :md="6" :sm="12" :xs="24" :loading="loading">
         <SummaryCard title="昨日销售" :value="saleSummary?.yesterdayPrice" />

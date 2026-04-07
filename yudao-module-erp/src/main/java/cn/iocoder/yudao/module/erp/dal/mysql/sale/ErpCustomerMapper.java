@@ -22,6 +22,7 @@ public interface ErpCustomerMapper extends BaseMapperX<ErpCustomerDO> {
                 .likeIfPresent(ErpCustomerDO::getName, reqVO.getName())
                 .eqIfPresent(ErpCustomerDO::getMobile, reqVO.getMobile())
                 .eqIfPresent(ErpCustomerDO::getTelephone, reqVO.getTelephone())
+                .likeIfPresent(ErpCustomerDO::getMainCrops, reqVO.getMainCrops())
                 .orderByDesc(ErpCustomerDO::getId));
     }
 

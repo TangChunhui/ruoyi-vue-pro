@@ -39,6 +39,9 @@ public class ErpAgriStockBalanceRespVO {
     @Schema(description = "是否高毒限用")
     private Boolean isRestricted;
 
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）")
+    private Integer agriType;
+
     @Schema(description = "登记证有效期")
     private java.time.LocalDateTime registrationExpiryDate;
 

@@ -1,6 +1,4 @@
-<!-- ERP 产品列表 -->
 <template>
-  <doc-alert title="【产品】产品信息、分类、单位" url="https://doc.iocoder.cn/erp/product/" />
 
   <ContentWrap>
     <!-- 搜索工作栏 -->
@@ -31,8 +29,18 @@
           class="!w-240px"
         />
       </el-form-item>
+      <el-form-item label="农资类型" prop="agriType">
+        <el-select v-model="queryParams.agriType" clearable placeholder="全部类型" class="!w-130px">
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.ERP_AGRI_TYPE)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="高毒限用" prop="isRestricted">
-        <el-select v-model="queryParams.isRestricted" clearable placeholder="请选择" class="!w-240px">
+        <el-select v-model="queryParams.isRestricted" clearable placeholder="请选择" class="!w-130px">
           <el-option label="是" :value="1" />
           <el-option label="否" :value="0" />
         </el-select>
@@ -66,11 +74,33 @@
     <el-table v-loading="loading" :data="list" :stripe="true" :show-overflow-tooltip="true">
       <el-table-column label="条码" align="center" prop="barCode" />
       <el-table-column label="名称" align="center" prop="name" min-width="150" />
-      <el-table-column label="登记证号" align="center" prop="registrationNo" width="120" />
-      <el-table-column label="高毒限用" align="center" prop="isRestricted" width="100">
+      <el-table-column label="农资类型" align="center" prop="agriType" width="90">
+        <template #default="{ row }">
+          <DictTag v-if="row.agriType" :type="DICT_TYPE.ERP_AGRI_TYPE" :value="row.agriType" size="small" />
+          <span v-else class="text-gray-400">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="登记证号" align="center" prop="registrationNo" width="130">
+        <template #default="{ row }">{{ row.registrationNo || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="登记证有效期" align="center" prop="registrationExpiryDate" width="150">
+        <template #default="{ row }">
+          <template v-if="row.registrationExpiryDate">
+            <el-tag :type="getRegistrationTagType(row.registrationExpiryDate)" size="small">
+              {{ formatDate(row.registrationExpiryDate, 'YYYY-MM-DD') }}
+            </el-tag>
+            <div v-if="getRegistrationDays(row.registrationExpiryDate) < 30" class="text-11px mt-2px"
+              :class="getRegistrationDays(row.registrationExpiryDate) < 0 ? 'text-red-500' : 'text-orange-500'">
+              {{ getRegistrationDays(row.registrationExpiryDate) < 0 ? '已过期' : `${getRegistrationDays(row.registrationExpiryDate)}天后到期` }}
+            </div>
+          </template>
+          <span v-else class="text-gray-400">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="高毒限用" align="center" prop="isRestricted" width="90">
         <template #default="scope">
-          <el-tag :type="scope.row.isRestricted ? 'danger' : 'success'">
-            {{ scope.row.isRestricted ? '是' : '否' }}
+          <el-tag :type="scope.row.isRestricted ? 'danger' : 'success'" size="small">
+            {{ scope.row.isRestricted ? '高毒' : '普通' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -100,13 +130,9 @@
           <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="scope.row.status" />
         </template>
       </el-table-column>
-      <el-table-column
-        label="创建时间"
-        align="center"
-        prop="createTime"
-        :formatter="dateFormatter"
-        width="180px"
-      />
+      <el-table-column label="创建时间" align="center" prop="createTime" width="170">
+        <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
+      </el-table-column>
       <el-table-column label="操作" align="center" width="110">
         <template #default="scope">
           <el-button
@@ -142,17 +168,26 @@
 </template>
 
 <script setup lang="ts">
-import { dateFormatter } from '@/utils/formatTime'
+import { formatDate } from '@/utils/formatTime'
 import download from '@/utils/download'
+import dayjs from 'dayjs'
 import { ProductApi, ProductVO } from '@/api/erp/product/product'
 import { ProductCategoryApi, ProductCategoryVO } from '@/api/erp/product/category'
 import ProductForm from './ProductForm.vue'
-import { DICT_TYPE } from '@/utils/dict'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { defaultProps, handleTree } from '@/utils/tree'
 import { erpPriceTableColumnFormatter } from '@/utils'
 
 /** ERP 产品列表 */
 defineOptions({ name: 'ErpProduct' })
+
+const getRegistrationDays = (date: any) => dayjs(date).diff(dayjs(), 'day')
+const getRegistrationTagType = (date: any) => {
+  const days = getRegistrationDays(date)
+  if (days < 0) return 'danger'
+  if (days < 30) return 'warning'
+  return 'success'
+}
 
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
@@ -165,7 +200,8 @@ const queryParams = reactive({
   pageSize: 10,
   name: undefined,
   categoryId: undefined,
-  isRestricted: undefined
+  isRestricted: undefined,
+  agriType: undefined
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中

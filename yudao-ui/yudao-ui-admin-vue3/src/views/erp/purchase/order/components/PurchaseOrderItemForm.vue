@@ -8,6 +8,19 @@
     :inline-message="true"
     :disabled="disabled"
   >
+    <!-- 条码扫描快速录入 -->
+    <el-row v-if="!disabled" class="mb-10px">
+      <el-col :span="14">
+        <el-input
+          v-model="barcodeValue"
+          placeholder="扫描条码快速添加产品（扫描枪按 Enter 自动触发）"
+          clearable
+          @keyup.enter="handleBarcodeScan"
+        >
+          <template #prepend>条码扫描</template>
+        </el-input>
+      </el-col>
+    </el-row>
     <el-table :data="formData" show-summary :summary-method="getSummaries" class="-mt-10px">
       <el-table-column label="序号" type="index" align="center" width="60" />
       <el-table-column label="产品名称" min-width="180">
@@ -182,6 +195,7 @@ import {
   getSumValue
 } from '@/utils'
 import dayjs from 'dayjs'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
   items: undefined
@@ -196,6 +210,7 @@ const formRules = reactive({
 })
 const formRef = ref([]) // 表单 Ref
 const productList = ref<ProductVO[]>([]) // 产品列表
+const barcodeValue = ref('') // 扫码输入值
 
 /** 初始化设置入库项 */
 watch(
@@ -300,6 +315,46 @@ const setStockCount = async (row: any) => {
   }
   const count = await StockApi.getStockCount(row.productId)
   row.stockCount = count || 0
+}
+
+/** 条码扫描处理 */
+const handleBarcodeScan = () => {
+  const barcode = barcodeValue.value.trim()
+  if (!barcode) return
+  const product = productList.value.find((p) => p.barCode === barcode)
+  if (!product) {
+    ElMessage.warning(`未找到条码为 "${barcode}" 的产品`)
+    barcodeValue.value = ''
+    return
+  }
+  const existingRow = formData.value.find((row) => row.productId === product.id)
+  if (existingRow) {
+    existingRow.count = (existingRow.count || 0) + 1
+    ElMessage.success(`已增加 ${product.name} 数量`)
+  } else {
+    const row = {
+      id: undefined,
+      productId: product.id,
+      productUnitName: product.unitName,
+      productBarCode: product.barCode,
+      productPrice: product.purchasePrice,
+      expiryDay: product.expiryDay,
+      stockCount: undefined,
+      count: 1,
+      totalProductPrice: undefined,
+      taxPercent: undefined,
+      taxPrice: undefined,
+      totalPrice: undefined,
+      batchNo: undefined,
+      productionDate: undefined,
+      expiryDate: undefined,
+      remark: undefined
+    }
+    formData.value.push(row)
+    setStockCount(row)
+    ElMessage.success(`已添加 ${product.name}`)
+  }
+  barcodeValue.value = ''
 }
 
 /** 表单校验 */

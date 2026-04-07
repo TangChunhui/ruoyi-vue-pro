@@ -25,4 +25,7 @@ public class ErpCustomerPageReqVO extends PageParam {
     @Schema(description = "联系电话", example = "15601691300")
     private String telephone;
 
+    @Schema(description = "主要作物", example = "水稻")
+    private String mainCrops;
+
 }

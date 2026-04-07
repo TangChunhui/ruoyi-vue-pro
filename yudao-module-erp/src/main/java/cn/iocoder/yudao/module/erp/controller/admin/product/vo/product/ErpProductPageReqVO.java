@@ -23,6 +23,9 @@ public class ErpProductPageReqVO extends PageParam {
     @Schema(description = "是否高毒限用", example = "1")
     private Integer isRestricted;
 
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）", example = "1")
+    private Integer agriType;
+
     @Schema(description = "创建时间")
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] createTime;

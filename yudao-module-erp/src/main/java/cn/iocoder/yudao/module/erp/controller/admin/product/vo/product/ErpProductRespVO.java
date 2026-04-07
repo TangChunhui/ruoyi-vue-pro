@@ -83,6 +83,10 @@ public class ErpProductRespVO {
     @Schema(description = "标准亩用量", example = "50.00")
     private BigDecimal standardDosagePerMu;
 
+    @Schema(description = "农资类型（1-农药，2-化肥，3-种子）", example = "1")
+    @ExcelProperty("农资类型")
+    private Integer agriType;
+
     @Schema(description = "创建时间", requiredMode = Schema.RequiredMode.REQUIRED)
     @ExcelProperty("创建时间")
     private LocalDateTime createTime;

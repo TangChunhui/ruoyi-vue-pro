@@ -17,6 +17,7 @@ export interface CustomerVO {
   bankName: string // 开户行
   bankAccount: string // 开户账号
   bankAddress: string // 开户地址
+  address: string // 地址
   creditLimit: number // 信用额度
   currentDebt: number // 当前欠款
   landArea: number // 种植面积

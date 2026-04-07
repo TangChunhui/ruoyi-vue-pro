@@ -34,9 +34,17 @@ export const AgriReportApi = {
     },
     // 获得监控回放地址
     getPlaybackUrl: async (bizId: number, bizType: string, preMinutes?: number, postMinutes?: number) => {
-        return await request.get({ 
-            url: `/erp/agri-report/get-playback-url`, 
-            params: { bizId, bizType, preMinutes, postMinutes } 
+        return await request.get({
+            url: `/erp/agri-report/get-playback-url`,
+            params: { bizId, bizType, preMinutes, postMinutes }
         })
+    },
+    // 获得 Seetong 摄像头设备列表
+    getSeetongDevices: async () => {
+        return await request.get({ url: `/erp/agri-report/seetong-devices` })
+    },
+    // 获得农资购进台账列表
+    getPurchaseLedgerList: async (params: any) => {
+        return await request.get({ url: `/erp/agri-report/purchase-ledger-list`, params })
     }
 }

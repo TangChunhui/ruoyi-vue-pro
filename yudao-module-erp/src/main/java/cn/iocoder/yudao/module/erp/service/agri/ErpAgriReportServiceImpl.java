@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.erp.service.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
@@ -133,10 +134,21 @@ public class ErpAgriReportServiceImpl implements ErpAgriReportService {
             return null;
         }
 
-        // 使用传入参数或默认配置
-        int pre = preMinutes != null ? preMinutes : seetongProperties.getPreMinutes();
+        int pre  = preMinutes  != null ? preMinutes  : seetongProperties.getPreMinutes();
         int post = postMinutes != null ? postMinutes : seetongProperties.getPostMinutes();
-
         return seetongClient.getPlaybackUrl(cameraId, videoTime.minusMinutes(pre), videoTime.plusMinutes(post));
+    }
+
+    @Override
+    public List<cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient.DeviceVO> getSeetongDeviceList() {
+        if (!seetongProperties.isEnabled()) {
+            return new java.util.ArrayList<>();
+        }
+        return seetongClient.getDeviceList();
+    }
+
+    @Override
+    public List<ErpAgriPurchaseLedgerRespVO> getPurchaseLedgerList(ErpAgriStockBalanceReqVO req) {
+        return agriReportMapper.selectPurchaseLedgerList(req);
     }
 }

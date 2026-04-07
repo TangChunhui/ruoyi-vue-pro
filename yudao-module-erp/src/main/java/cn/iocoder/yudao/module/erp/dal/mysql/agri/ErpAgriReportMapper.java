@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.erp.dal.mysql.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
@@ -103,5 +104,10 @@ public interface ErpAgriReportMapper {
      * 获得供货商资质到期预警列表
      */
     List<cn.iocoder.yudao.module.erp.controller.admin.purchase.vo.supplier.ErpSupplierRespVO> selectSupplierLicenseCountdown();
+
+    /**
+     * 查询农资购进台账（采购订单明细，按 agriType 过滤）
+     */
+    List<ErpAgriPurchaseLedgerRespVO> selectPurchaseLedgerList(@Param("req") ErpAgriStockBalanceReqVO req);
 
 }

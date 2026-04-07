@@ -147,6 +147,18 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item label="农资类型" prop="agriType">
+            <el-select v-model="formData.agriType" clearable placeholder="请选择农资类型" class="!w-1/1">
+              <el-option
+                v-for="dict in getIntDictOptions(DICT_TYPE.ERP_AGRI_TYPE)"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item label="是否高毒限用" prop="isRestricted">
             <el-switch v-model="formData.isRestricted" active-text="是" inactive-text="否" />
           </el-form-item>
@@ -199,7 +211,8 @@ const formData = ref({
   registrationExpiryDate: undefined,
   registrationNo: undefined,
   isRestricted: false,
-  standardDosagePerMu: undefined
+  standardDosagePerMu: undefined,
+  agriType: undefined
 })
 const formRules = reactive({
   name: [{ required: true, message: '产品名称不能为空', trigger: 'blur' }],
@@ -278,7 +291,8 @@ const resetForm = () => {
     registrationExpiryDate: undefined,
     registrationNo: undefined,
     isRestricted: false,
-    standardDosagePerMu: undefined
+    standardDosagePerMu: undefined,
+    agriType: undefined
   }
   formRef.value?.resetFields()
 }

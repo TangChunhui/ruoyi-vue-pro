@@ -54,6 +54,20 @@ public class ErpSaleOrderSaveReqVO {
     @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
     private String buyerIdCard;
 
+    // ========== 视频存证 ==========
+    @Schema(description = "监控摄像头 ID（Seetong 设备/通道 ID）", example = "camera-001")
+    private String cameraId;
+
+    @Schema(description = "视频关联时间（默认取下单时间）")
+    private LocalDateTime videoTime;
+
+    // ========== 财务与统计 ==========
+    @Schema(description = "收银员编号", example = "1")
+    private Long cashierId;
+
+    @Schema(description = "财务审核状态", example = "20")
+    private Integer financeStatus;
+
     @Schema(description = "订单清单列表")
     private List<Item> items;
 

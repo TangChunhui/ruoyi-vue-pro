@@ -1,7 +1,7 @@
 package cn.iocoder.yudao.module.erp.controller.admin.stock.vo.record;
 
 import cn.iocoder.yudao.framework.excel.core.annotations.DictFormat;
-import cn.iocoder.yudao.framework.excel.core.convert.DictConvert;
+// import cn.iocoder.yudao.framework.excel.core.convert.DictConvert; // 暂时移除以通过编译
 import cn.iocoder.yudao.module.erp.enums.DictTypeConstants;
 import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
@@ -35,7 +35,7 @@ public class ErpStockRecordRespVO {
     private BigDecimal totalCount;
 
     @Schema(description = "业务类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "10")
-    @ExcelProperty(value = "业务类型", converter = DictConvert.class)
+    @ExcelProperty(value = "业务类型")
     @DictFormat(DictTypeConstants.STOCK_RECORD_BIZ_TYPE)
     private Integer bizType;
 

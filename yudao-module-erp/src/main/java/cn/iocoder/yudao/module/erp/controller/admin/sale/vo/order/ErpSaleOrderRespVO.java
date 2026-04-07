@@ -113,6 +113,13 @@ public class ErpSaleOrderRespVO {
     @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
     private String buyerIdCard;
 
+    // ========== 财务与统计 ==========
+    @Schema(description = "收银员编号", example = "1")
+    private Long cashierId;
+
+    @Schema(description = "财务审核状态", example = "20")
+    private Integer financeStatus;
+
     @Data
     public static class Item {
 

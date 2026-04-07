@@ -47,6 +47,12 @@ public class ErpSaleOrderDO extends BaseDO {
      */
     private Long customerId;
     /**
+     * 收银员编号
+     *
+     * 关联 AdminUserDO 的 id 字段
+     */
+    private Long cashierId;
+    /**
      * 结算账户编号
      *
      * 关联 {@link ErpAccountDO#getId()}
@@ -150,5 +156,11 @@ public class ErpSaleOrderDO extends BaseDO {
      */
     private String videoUrl;
 
+    /**
+     * 财务审核状态
+     *
+     * 枚举 {@link cn.iocoder.yudao.module.erp.enums.ErpAuditStatus}
+     */
+    private Integer financeStatus;
 
 }

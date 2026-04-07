@@ -1,10 +1,12 @@
 package cn.iocoder.yudao.module.erp.service.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOverviewRespVO;
 
+import cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient;
 import java.util.List;
 
 /**
@@ -59,5 +61,15 @@ public interface ErpAgriReportService {
      * 获得监控回放地址
      */
     String getPlaybackUrl(Long bizId, String bizType, Integer preMinutes, Integer postMinutes);
+
+    /**
+     * 获得 Seetong 摄像头设备列表
+     */
+    List<SeetongClient.DeviceVO> getSeetongDeviceList();
+
+    /**
+     * 获得农资购进台账列表
+     */
+    List<ErpAgriPurchaseLedgerRespVO> getPurchaseLedgerList(ErpAgriStockBalanceReqVO req);
 
 }

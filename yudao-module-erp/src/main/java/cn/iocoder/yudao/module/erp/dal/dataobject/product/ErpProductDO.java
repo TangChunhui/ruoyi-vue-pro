@@ -101,5 +101,9 @@ public class ErpProductDO extends BaseDO {
      * 标准亩用量
      */
     private BigDecimal standardDosagePerMu;
+    /**
+     * 农资类型（1-农药，2-化肥，3-种子）
+     */
+    private Integer agriType;
 
 }

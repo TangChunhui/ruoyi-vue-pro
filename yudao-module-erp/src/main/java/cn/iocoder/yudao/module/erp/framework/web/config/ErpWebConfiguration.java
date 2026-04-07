@@ -11,9 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.annotation.Resource;
 
 /**
- * erp 模块的 web 组件的 Configuration
- *
- * @author 芋道源码
+ * ERP 模块 Web 配置
  */
 @Configuration(proxyBeanMethods = false)
 public class ErpWebConfiguration implements WebMvcConfigurer {
@@ -23,13 +21,16 @@ public class ErpWebConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 静态资源处理：将本地存储的监控视频映射到 URL
-        registry.addResourceHandler(seetongProperties.getUrlPrefix() + "/**")
-                .addResourceLocations("file:" + seetongProperties.getLocalPath() + "/");
+        // 将本地视频存证目录映射为静态资源，使前端可直接访问
+        // 例：GET /static/video/2024-03-15/sale_order_1001.mp4
+        if (seetongProperties.isEnabled()) {
+            registry.addResourceHandler(seetongProperties.getUrlPrefix() + "/**")
+                    .addResourceLocations("file:" + seetongProperties.getLocalPath() + "/");
+        }
     }
 
     /**
-     * erp 模块的 API 分组
+     * ERP 模块的 Swagger API 分组
      */
     @Bean
     public GroupedOpenApi erpGroupedOpenApi() {

@@ -16,7 +16,7 @@ export interface ProductVO {
   purchasePrice: number // 采购价格，单位：元
   salePrice: number // 销售价格，单位：元
   minPrice: number // 最低价格，单位：元
-  agriType: string // 农资类型
+  agriType: number // 农资类型（1农药2化肥3种子）
   registrationExpiryDate: Date // 登记证有效期
   isRestricted: boolean // 是否限用/高毒
   standardDosagePerMu: number // 标准亩用量

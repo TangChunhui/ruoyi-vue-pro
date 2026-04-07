@@ -3,9 +3,12 @@ package cn.iocoder.yudao.module.erp.service.agri;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOrderDO;
+import cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOutDO;
 import cn.iocoder.yudao.module.erp.dal.mysql.sale.ErpSaleOrderMapper;
 import cn.iocoder.yudao.module.erp.dal.mysql.sale.ErpSaleOutMapper;
 import cn.iocoder.yudao.module.erp.framework.seetong.config.SeetongProperties;
+import cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,11 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * 视频存证服务实现
+ *
+ * 流程：交易发生 → 等待2分钟（NVR转码就绪）→ 取前后10分钟片段 → 下载到本地 → 更新账目URL
+ */
 @Service
 @Slf4j
 public class VideoStorageServiceImpl implements VideoStorageService {
@@ -23,7 +31,7 @@ public class VideoStorageServiceImpl implements VideoStorageService {
     private SeetongProperties properties;
 
     @Resource
-    private ErpAgriReportService agriReportService;
+    private SeetongClient seetongClient;
 
     @Resource
     private ErpSaleOrderMapper saleOrderMapper;
@@ -34,47 +42,53 @@ public class VideoStorageServiceImpl implements VideoStorageService {
     @Override
     @Async
     public void downloadAndStoreVideo(Long bizId, String bizType, String cameraId, LocalDateTime videoTime) {
+        if (!properties.isEnabled()) {
+            log.debug("[VideoStorage][Seetong 未启用，跳过视频存证 bizId={}]", bizId);
+            return;
+        }
         if (StrUtil.isEmpty(cameraId) || videoTime == null) {
+            log.debug("[VideoStorage][cameraId 或 videoTime 为空，跳过 bizId={}]", bizId);
             return;
         }
 
         try {
-            // 1. 等待一段时间，确保监控录像已在 NVR/云端 就绪 (例如 2 分钟)
-            // 现实场景中，回放视频生成可能有一点延迟
-            Thread.sleep(120 * 1000L);
+            // 1. 等待 NVR 录像就绪（实际录像一般有约2分钟延迟才可回放）
+            Thread.sleep(120_000L);
 
-            // 2. 获取回放地址 (默认配置时长)
-            // 注意：这里需要确保 SeetongClient 返回的是可直接下载的格式 (mp4)，如果是 HLS 可能需要 FFmpeg
-            String playbackUrl = agriReportService.getPlaybackUrl(bizId, bizType, null, null);
+            // 2. 计算时间窗口：交易前 preMinutes 分钟 ~ 交易后 postMinutes 分钟
+            LocalDateTime startTime = videoTime.minusMinutes(properties.getPreMinutes());
+            LocalDateTime endTime   = videoTime.plusMinutes(properties.getPostMinutes());
+
+            // 3. 获取回放地址（HLS m3u8）
+            String playbackUrl = seetongClient.getPlaybackUrl(cameraId, startTime, endTime);
             if (StrUtil.isEmpty(playbackUrl)) {
-                log.warn("[VideoStorage][bizId({}) bizType({}) 获取播放地址失败]", bizId, bizType);
+                log.warn("[VideoStorage][获取回放地址失败 bizId={} cameraId={}]", bizId, cameraId);
                 return;
             }
 
-            // 3. 构建本地存储路径
-            String day = videoTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = String.format("%s_%s.mp4", bizType, bizId);
-            String fullPath = properties.getLocalPath() + File.separator + day + File.separator + fileName;
-            
-            // 4. 下载文件
-            // 如果 playbackUrl 是 m3u8，此处下载会变成下载 playlist，实际应用中可能需要 ffmpeg 命令行
-            log.info("[VideoStorage][开始抓取视频: {} -> {}]", playbackUrl, fullPath);
-            FileUtil.mkdir(properties.getLocalPath() + File.separator + day);
-            HttpUtil.downloadFile(playbackUrl, fullPath);
+            // 4. 构建本地存储路径： /data/video/2024-03-15/sale_order_1001.mp4
+            String day      = videoTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = String.format("%s_%d.mp4", bizType, bizId);
+            String dir      = properties.getLocalPath() + File.separator + day;
+            String fullPath = dir + File.separator + fileName;
 
-            // 5. 更新数据库
+            FileUtil.mkdir(dir); // 确保目录存在
+            log.info("[VideoStorage][开始下载视频存证: {} -> {}]", playbackUrl, fullPath);
+            HttpUtil.downloadFile(playbackUrl, new File(fullPath));
+
+            // 5. 构建访问 URL 并写回数据库
             String videoUrl = properties.getUrlPrefix() + "/" + day + "/" + fileName;
             if ("sale_order".equals(bizType)) {
-                saleOrderMapper.updateById(new cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOrderDO()
-                        .setId(bizId).setVideoUrl(videoUrl));
+                saleOrderMapper.updateById(new ErpSaleOrderDO().setId(bizId).setVideoUrl(videoUrl));
             } else if ("sale_out".equals(bizType)) {
-                saleOutMapper.updateById(new cn.iocoder.yudao.module.erp.dal.dataobject.sale.ErpSaleOutDO()
-                        .setId(bizId).setVideoUrl(videoUrl));
+                saleOutMapper.updateById(new ErpSaleOutDO().setId(bizId).setVideoUrl(videoUrl));
             }
-            log.info("[VideoStorage][视频抓取并关联成功: {}]", videoUrl);
+            log.info("[VideoStorage][视频存证成功: bizId={} url={}]", bizId, videoUrl);
 
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
-            log.error("[VideoStorage][抓取视频失败: {}]", e.getMessage());
+            log.error("[VideoStorage][视频存证失败 bizId={}: {}]", bizId, e.getMessage(), e);
         }
     }
 }
