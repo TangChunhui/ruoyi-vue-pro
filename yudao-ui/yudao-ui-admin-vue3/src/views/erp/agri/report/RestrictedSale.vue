@@ -148,8 +148,17 @@ const resetQuery = () => {
 
 /** 导出按钮操作 */
 const handleExport = async () => {
-  // 暂时提示
-  message.success('电子台账导出成功，已发送至您的下载中心')
+  try {
+    const params = {
+      productId: queryParams.productId,
+      beginTime: queryParams.timeRange?.[0],
+      endTime: queryParams.timeRange?.[1]
+    }
+    await AgriReportApi.exportRestrictedSaleExcel(params)
+    message.success('导出成功')
+  } catch {
+    message.error('导出失败')
+  }
 }
 
 /** 效期预警 */

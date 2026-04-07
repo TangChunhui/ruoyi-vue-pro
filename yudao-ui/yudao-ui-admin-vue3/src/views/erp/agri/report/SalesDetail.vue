@@ -150,12 +150,25 @@ const resetQuery = () => {
   handleQuery()
 }
 
+const message = useMessage()
+
 /** 导出操作 */
 const handleExport = async () => {
-  // 简易模拟导出逻辑
-  console.log('导出销售明细', queryParams)
-  const message = useMessage()
-  message.success('导出数据生成中，请稍后在下载中心查看')
+  exportLoading.value = true
+  try {
+    const params = {
+      beginTime: queryParams.orderTime?.[0],
+      endTime: queryParams.orderTime?.[1],
+      productId: queryParams.productId,
+      customerId: queryParams.customerId
+    }
+    await AgriReportApi.exportSalesDetailExcel(params)
+    message.success('导出成功')
+  } catch {
+    message.error('导出失败')
+  } finally {
+    exportLoading.value = false
+  }
 }
 
 /** 初始化 **/

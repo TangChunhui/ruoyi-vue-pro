@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.erp.service.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriBatchTraceRespVO;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
@@ -17,6 +19,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 农资报表 Service 实现类
@@ -77,19 +80,19 @@ public class ErpAgriReportServiceImpl implements ErpAgriReportService {
     }
 
     @Override
-    public cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO getAgriFinanceSummary() {
+    public ErpAgriFinanceSummaryRespVO getAgriFinanceSummary() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime beginTime = now.toLocalDate().atStartOfDay();
         LocalDateTime endTime = now.toLocalDate().atTime(LocalTime.MAX);
 
-        cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO vo = new cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO();
-        
+        ErpAgriFinanceSummaryRespVO vo = new ErpAgriFinanceSummaryRespVO();
+
         // 1. 基础金额统计
         vo.setTotalReceivableAmount(agriReportMapper.selectTotalReceivableAmount());
         vo.setTodayReceiptAmount(agriReportMapper.selectReceiptAmount(beginTime, endTime));
         vo.setTodayPaymentAmount(agriReportMapper.selectPaymentAmount(beginTime, endTime));
         vo.setTodaySalesAmount(agriReportMapper.selectSalesAmount(beginTime, endTime));
-        
+
         // 2. 净现金流计算
         java.math.BigDecimal receipt = vo.getTodayReceiptAmount() != null ? vo.getTodayReceiptAmount() : java.math.BigDecimal.ZERO;
         java.math.BigDecimal payment = vo.getTodayPaymentAmount() != null ? vo.getTodayPaymentAmount() : java.math.BigDecimal.ZERO;
@@ -97,7 +100,35 @@ public class ErpAgriReportServiceImpl implements ErpAgriReportService {
 
         // 3. 流水列表
         vo.setFlowList(agriReportMapper.selectTodayFinanceFlowList(beginTime, endTime));
-        
+
+        // 4. 近15日每日销售趋势（用于驾驶舱图表）
+        vo.setDailyStats(agriReportMapper.selectDailySalesStats(15));
+
+        return vo;
+    }
+
+    @Override
+    public ErpAgriBatchTraceRespVO getBatchTraceDetail(Long productId, String batchNo) {
+        String batchNoParam = batchNo != null ? batchNo : "";
+        ErpAgriBatchTraceRespVO vo = agriReportMapper.selectBatchTraceDetail(productId, batchNoParam);
+        if (vo == null) {
+            return null;
+        }
+
+        // 查询销售流向补充数据（salesCount / totalOutCount / mainCustomerNames / hasVideo）
+        Map<String, Object> saleStats = agriReportMapper.selectBatchSaleStatsMap(productId, batchNoParam);
+        if (saleStats != null) {
+            Object salesCount = saleStats.get("salesCount");
+            Object totalOutCount = saleStats.get("totalOutCount");
+            Object mainCustomerNames = saleStats.get("mainCustomerNames");
+            Object hasVideoInt = saleStats.get("hasVideoInt");
+
+            vo.setSalesCount(salesCount != null ? ((Number) salesCount).longValue() : 0L);
+            vo.setTotalOutCount(totalOutCount != null ? new java.math.BigDecimal(totalOutCount.toString()) : java.math.BigDecimal.ZERO);
+            vo.setMainCustomerNames(mainCustomerNames != null ? mainCustomerNames.toString() : null);
+            vo.setHasVideo(hasVideoInt != null && ((Number) hasVideoInt).intValue() == 1);
+        }
+
         return vo;
     }
 

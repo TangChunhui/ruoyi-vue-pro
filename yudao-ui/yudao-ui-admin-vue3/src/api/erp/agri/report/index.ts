@@ -46,5 +46,21 @@ export const AgriReportApi = {
     // 获得农资购进台账列表
     getPurchaseLedgerList: async (params: any) => {
         return await request.get({ url: `/erp/agri-report/purchase-ledger-list`, params })
+    },
+    // 导出高毒限用农资销售台账 Excel
+    exportRestrictedSaleExcel: async (params: any) => {
+        return await request.download({ url: `/erp/agri-report/export-restricted-sale`, params })
+    },
+    // 导出全量销售明细 Excel
+    exportSalesDetailExcel: async (params: any) => {
+        return await request.download({ url: `/erp/agri-report/export-sales-detail`, params })
+    },
+    // 导出农资购进台账 Excel
+    exportPurchaseLedgerExcel: async (params: any) => {
+        return await request.download({ url: `/erp/agri-report/export-purchase-ledger`, params })
+    },
+    // 获得农资批次全生命周期溯源详情
+    getBatchTraceDetail: async (productId: number, batchNo?: string) => {
+        return await request.get({ url: `/erp/agri-report/batch-trace-detail`, params: { productId, batchNo } })
     }
 }

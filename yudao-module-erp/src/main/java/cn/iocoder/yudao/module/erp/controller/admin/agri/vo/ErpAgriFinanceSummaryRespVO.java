@@ -28,6 +28,19 @@ public class ErpAgriFinanceSummaryRespVO {
     @Schema(description = "今日流水记录")
     private List<FlowItem> flowList;
 
+    @Schema(description = "近15日每日销售统计（用于趋势图）")
+    private List<DailyStat> dailyStats;
+
+    @Data
+    public static class DailyStat {
+        @Schema(description = "日期，格式 MM-dd", example = "03-27")
+        private String date;
+        @Schema(description = "当日销售额", example = "3200.00")
+        private BigDecimal revenue;
+        @Schema(description = "当日销售笔数", example = "15")
+        private Long count;
+    }
+
     @Data
     public static class FlowItem {
         @Schema(description = "类型（1-收入，2-支出）", example = "1")

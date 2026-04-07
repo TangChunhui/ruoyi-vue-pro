@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 农资报表 Mapper
@@ -109,5 +110,22 @@ public interface ErpAgriReportMapper {
      * 查询农资购进台账（采购订单明细，按 agriType 过滤）
      */
     List<ErpAgriPurchaseLedgerRespVO> selectPurchaseLedgerList(@Param("req") ErpAgriStockBalanceReqVO req);
+
+    /**
+     * 查询近 N 天每日销售额和笔数（用于驾驶舱趋势图）
+     */
+    List<cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO.DailyStat> selectDailySalesStats(@Param("days") int days);
+
+    /**
+     * 查询批次全生命周期溯源数据
+     */
+    cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriBatchTraceRespVO selectBatchTraceDetail(
+            @Param("productId") Long productId, @Param("batchNo") String batchNo);
+
+    /**
+     * 查询批次销售流向统计（Map 接收：salesCount/totalOutCount/mainCustomerNames/hasVideoInt）
+     */
+    Map<String, Object> selectBatchSaleStatsMap(
+            @Param("productId") Long productId, @Param("batchNo") String batchNo);
 
 }

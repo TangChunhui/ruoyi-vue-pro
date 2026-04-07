@@ -176,7 +176,7 @@ const trendMode = ref('营收')
 const statCards = computed(() => [
   {
     title: '今日销售总额',
-    value: financeSummary.value.todaySales || 0,
+    value: financeSummary.value.todaySalesAmount || 0,
     unit: '元',
     type: 'revenue',
     icon: 'ep:money',
@@ -186,15 +186,15 @@ const statCards = computed(() => [
     footerText: '较昨日'
   },
   {
-    title: '限用农药占比',
-    value: warningStats.value.restrictedSalePercent || 0,
-    unit: '%',
+    title: '本月限用农药销售',
+    value: warningStats.value.monthlyRestrictedSaleCount || 0,
+    unit: '笔',
     type: 'restricted',
     icon: 'ep:warning',
     iconColor: '#FF9800',
     iconBg: '#fff3e0',
     trend: -2.1,
-    footerText: '合规率达 98%'
+    footerText: '高毒限用合规管控'
   },
   {
     title: '临期预警批次',
@@ -209,7 +209,7 @@ const statCards = computed(() => [
   },
   {
     title: '待收货款 (挂账)',
-    value: financeSummary.value.totalReceivable || 0,
+    value: financeSummary.value.totalReceivableAmount || 0,
     unit: '元',
     type: 'asset',
     icon: 'ep:wallet',
@@ -255,12 +255,14 @@ const fastActions = [
   }
 ]
 
+const dailyStats = computed(() => financeSummary.value.dailyStats || [])
+
 const chartOptions = computed(() => ({
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
   tooltip: { trigger: 'axis' },
   xAxis: {
     type: 'category',
-    data: financeSummary.value.dailyStats?.map((i: any) => i.date) || [],
+    data: dailyStats.value.map((i: any) => i.date),
     axisLine: { lineStyle: { color: '#eee' } },
     axisLabel: { color: '#999' }
   },
@@ -270,12 +272,12 @@ const chartOptions = computed(() => ({
   },
   series: [
     {
-      name: trendMode.value === '营收' ? '营收额' : '交易笔数',
+      name: trendMode.value === '营收' ? '营收额(元)' : '交易笔数',
       type: 'line',
       smooth: true,
-      data: trendMode.value === '营收' 
-        ? financeSummary.value.dailyStats?.map((i: any) => i.revenue) || []
-        : financeSummary.value.dailyStats?.map((i: any) => i.count) || [],
+      data: trendMode.value === '营收'
+        ? dailyStats.value.map((i: any) => i.revenue)
+        : dailyStats.value.map((i: any) => i.count),
       lineStyle: { width: 4, color: '#409EFF' },
       areaStyle: {
         color: {

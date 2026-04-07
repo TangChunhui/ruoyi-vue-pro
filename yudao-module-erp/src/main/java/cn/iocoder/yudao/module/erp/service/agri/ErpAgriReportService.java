@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.erp.service.agri;
 
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriBatchTraceRespVO;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
@@ -22,9 +24,6 @@ public interface ErpAgriReportService {
     /**
      * 获取农资运营合规预警概览
      */
-    /**
-     * 获取农资运营合规预警概览
-     */
     ErpAgriWarningOverviewRespVO getAgriWarningOverview();
 
     /**
@@ -43,9 +42,9 @@ public interface ErpAgriReportService {
     List<ErpAgriStockBalanceRespVO> getExpiringStockList(Integer days);
 
     /**
-     * 获取农资财务概览（应收、今日收支流水）
+     * 获取农资财务概览（应收、今日收支流水、近15日趋势）
      */
-    cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO getAgriFinanceSummary();
+    ErpAgriFinanceSummaryRespVO getAgriFinanceSummary();
 
     /**
      * 获取高毒限用农资采购排行（合规排查）
@@ -71,5 +70,10 @@ public interface ErpAgriReportService {
      * 获得农资购进台账列表
      */
     List<ErpAgriPurchaseLedgerRespVO> getPurchaseLedgerList(ErpAgriStockBalanceReqVO req);
+
+    /**
+     * 获得批次全生命周期溯源详情
+     */
+    ErpAgriBatchTraceRespVO getBatchTraceDetail(Long productId, String batchNo);
 
 }

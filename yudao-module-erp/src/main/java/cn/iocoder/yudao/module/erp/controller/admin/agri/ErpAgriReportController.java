@@ -1,6 +1,8 @@
 package cn.iocoder.yudao.module.erp.controller.admin.agri;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.framework.excel.core.util.ExcelUtils;
+import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriBatchTraceRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriPurchaseLedgerRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriRestrictedSaleRespVO;
 import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriStockBalanceReqVO;
@@ -9,15 +11,19 @@ import cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriWarningOvervi
 import cn.iocoder.yudao.module.erp.service.agri.ErpAgriReportService;
 import cn.iocoder.yudao.module.erp.framework.seetong.core.SeetongClient;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
@@ -70,7 +76,7 @@ public class ErpAgriReportController {
     }
 
     @GetMapping("/finance-summary")
-    @Operation(summary = "获取农资财务概览（应收、今日收支流水）")
+    @Operation(summary = "获取农资财务概览（应收、今日收支流水、近15日趋势）")
     @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
     public CommonResult<cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriFinanceSummaryRespVO> getAgriFinanceSummary() {
         return success(agriReportService.getAgriFinanceSummary());
@@ -109,6 +115,42 @@ public class ErpAgriReportController {
     @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
     public CommonResult<List<ErpAgriPurchaseLedgerRespVO>> getPurchaseLedgerList(@Valid ErpAgriStockBalanceReqVO reqVO) {
         return success(agriReportService.getPurchaseLedgerList(reqVO));
+    }
+
+    @GetMapping("/export-restricted-sale")
+    @Operation(summary = "导出高毒限用农资销售台账 Excel")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:export')")
+    public void exportRestrictedSaleExcel(@Valid ErpAgriStockBalanceReqVO reqVO,
+                                          HttpServletResponse response) throws IOException {
+        List<ErpAgriRestrictedSaleRespVO> list = agriReportService.getRestrictedSaleList(reqVO);
+        ExcelUtils.write(response, "高毒限用农资销售台账.xls", "数据", ErpAgriRestrictedSaleRespVO.class, list);
+    }
+
+    @GetMapping("/export-sales-detail")
+    @Operation(summary = "导出全量销售明细 Excel")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:export')")
+    public void exportSalesDetailExcel(@Valid ErpAgriStockBalanceReqVO reqVO,
+                                       HttpServletResponse response) throws IOException {
+        List<ErpAgriRestrictedSaleRespVO> list = agriReportService.getSalesDetailList(reqVO);
+        ExcelUtils.write(response, "农资销售明细.xls", "数据", ErpAgriRestrictedSaleRespVO.class, list);
+    }
+
+    @GetMapping("/export-purchase-ledger")
+    @Operation(summary = "导出农资购进台账 Excel")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:export')")
+    public void exportPurchaseLedgerExcel(@Valid ErpAgriStockBalanceReqVO reqVO,
+                                          HttpServletResponse response) throws IOException {
+        List<ErpAgriPurchaseLedgerRespVO> list = agriReportService.getPurchaseLedgerList(reqVO);
+        ExcelUtils.write(response, "农资购进台账.xls", "数据", ErpAgriPurchaseLedgerRespVO.class, list);
+    }
+
+    @GetMapping("/batch-trace-detail")
+    @Operation(summary = "获得农资批次全生命周期溯源详情")
+    @PreAuthorize("@ss.hasPermission('erp:agri-report:query')")
+    public CommonResult<ErpAgriBatchTraceRespVO> getBatchTraceDetail(
+            @RequestParam @Parameter(description = "产品编号") Long productId,
+            @RequestParam(required = false) @Parameter(description = "批次号") String batchNo) {
+        return success(agriReportService.getBatchTraceDetail(productId, batchNo));
     }
 
 }

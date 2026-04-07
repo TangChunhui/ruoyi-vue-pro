@@ -1,6 +1,6 @@
 <template>
   <el-drawer v-model="drawerVisible" title="农资批次全生命周期追溯" size="600px" direction="rtl">
-    <div class="trace-container">
+    <div class="trace-container" v-loading="traceLoading">
       <!-- 1. 核心批次信息 -->
       <div class="batch-header-card">
         <div class="flex items-center mb-10px">
@@ -103,6 +103,7 @@
 
 <script setup lang="ts">
 import { Qrcode } from '@/components/Qrcode'
+import { AgriReportApi } from '@/api/erp/agri/report'
 import { formatDate } from '@/utils/formatTime'
 import dayjs from 'dayjs'
 
@@ -110,6 +111,7 @@ defineOptions({ name: 'TraceabilityGraph' })
 
 const drawerVisible = ref(false)
 const batchData = ref<any>({})
+const traceLoading = ref(false)
 
 const qrText = computed(() => `https://trace.iocoder.cn/qr/${batchData.value.batchNo || 'empty'}`)
 
@@ -131,14 +133,23 @@ const expiryDesc = computed(() => {
 const open = (row: any) => {
   batchData.value = { ...row }
   drawerVisible.value = true
-  fetchFullTrace(row.batchNo)
+  fetchFullTrace(row.productId, row.batchNo)
 }
 
-const fetchFullTrace = async (batchNo: string) => {
-  // TODO: 后续对接后端明细接口
-  console.log('Fetching trace for', batchNo)
-  // 模拟一些状态
-  batchData.value.hasVideo = true
+const fetchFullTrace = async (productId: number, batchNo: string) => {
+  if (!productId) return
+  traceLoading.value = true
+  try {
+    const detail = await AgriReportApi.getBatchTraceDetail(productId, batchNo)
+    if (detail) {
+      // 合并接口返回的溯源详情（保留原有字段作为兜底）
+      batchData.value = { ...batchData.value, ...detail }
+    }
+  } catch {
+    // 接口失败时保留原始行数据继续展示
+  } finally {
+    traceLoading.value = false
+  }
 }
 
 const handlePlayVideo = (data: any) => {
