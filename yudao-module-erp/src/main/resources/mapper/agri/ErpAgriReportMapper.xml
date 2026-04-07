@@ -155,6 +155,9 @@
         <if test="req.productId != null">
             AND p.id = #{req.productId}
         </if>
+        <if test="req.keyword != null and req.keyword != ''">
+            AND p.name LIKE CONCAT('%', #{req.keyword}, '%')
+        </if>
         ORDER BY o.order_time DESC
     </select>
 
@@ -376,38 +379,57 @@
         ORDER BY DATE(order_time) ASC
     </select>
 
-    <!-- 批次全生命周期溯源数据 -->
+    <!-- 批次全生命周期溯源数据（兼容 MySQL only_full_group_by） -->
     <select id="selectBatchTraceDetail"
             resultType="cn.iocoder.yudao.module.erp.controller.admin.agri.vo.ErpAgriBatchTraceRespVO">
         SELECT
             p.name          AS productName,
             p.is_restricted AS isRestricted,
             u.name          AS unitName,
-            /* 采购来源 */
-            MIN(po.order_time) AS firstInTime,
-            (SELECT no FROM erp_purchase_order WHERE id = (
-                SELECT o2.id FROM erp_purchase_order o2
-                INNER JOIN erp_purchase_order_items i2 ON o2.id = i2.order_id AND i2.deleted = 0
-                WHERE o2.deleted = 0 AND i2.product_id = p.id
-                  AND (#{batchNo} = '' OR i2.batch_no = #{batchNo})
-                ORDER BY o2.order_time ASC LIMIT 1
-            )) AS firstInNo,
-            s.name          AS supplierName,
-            IFNULL(SUM(poi.count), 0) AS totalInCount,
+            /* 采购汇总 */
+            IFNULL(agg.totalInCount, 0)     AS totalInCount,
+            agg.productionDate              AS productionDate,
+            agg.expiryDate                  AS expiryDate,
+            /* 最早一次采购 */
+            first_in.order_time             AS firstInTime,
+            first_in.no                     AS firstInNo,
+            first_in.supplierName           AS supplierName,
             /* 仓储 */
-            w.name          AS warehouseName,
-            IFNULL(stock.count, 0) AS currentStock,
-            /* 批次基本属性 */
-            poi.production_date AS productionDate,
-            poi.expiry_date     AS expiryDate
+            w.name                          AS warehouseName,
+            IFNULL(stock.count, 0)          AS currentStock
         FROM erp_product p
-        INNER JOIN erp_purchase_order_items poi ON poi.product_id = p.id AND poi.deleted = 0
-            AND (#{batchNo} = '' OR poi.batch_no = #{batchNo})
-        INNER JOIN erp_purchase_order po ON po.id = poi.order_id AND po.deleted = 0
-        LEFT JOIN erp_supplier s ON s.id = po.supplier_id AND s.deleted = 0
         LEFT JOIN erp_product_unit u ON u.id = p.unit_id AND u.deleted = 0
+        /* 采购明细汇总 */
+        LEFT JOIN (
+            SELECT
+                poi.product_id,
+                poi.batch_no,
+                SUM(poi.count)          AS totalInCount,
+                MAX(poi.production_date) AS productionDate,
+                MAX(poi.expiry_date)     AS expiryDate
+            FROM erp_purchase_order_items poi
+            INNER JOIN erp_purchase_order po ON po.id = poi.order_id AND po.deleted = 0
+            WHERE poi.deleted = 0
+              AND poi.product_id = #{productId}
+              AND (#{batchNo} IS NULL OR #{batchNo} = '' OR poi.batch_no = #{batchNo})
+            GROUP BY poi.product_id, poi.batch_no
+        ) agg ON agg.product_id = p.id
+        /* 最早一次采购订单（供应商、入库单号） */
+        LEFT JOIN (
+            SELECT po2.order_time, po2.no, s.name AS supplierName
+            FROM erp_purchase_order po2
+            INNER JOIN erp_purchase_order_items poi2
+                ON poi2.order_id = po2.id AND poi2.deleted = 0
+                AND poi2.product_id = #{productId}
+                AND (#{batchNo} IS NULL OR #{batchNo} = '' OR poi2.batch_no = #{batchNo})
+            LEFT JOIN erp_supplier s ON s.id = po2.supplier_id AND s.deleted = 0
+            WHERE po2.deleted = 0
+            ORDER BY po2.order_time ASC
+            LIMIT 1
+        ) first_in ON 1 = 1
+        /* 当前库存（取第一条批次库存记录） */
         LEFT JOIN erp_stock stock ON stock.product_id = p.id AND stock.deleted = 0
-            AND (#{batchNo} = '' OR stock.batch_no = #{batchNo})
+            AND (#{batchNo} IS NULL OR #{batchNo} = '' OR stock.batch_no = #{batchNo})
         LEFT JOIN erp_warehouse w ON w.id = stock.warehouse_id AND w.deleted = 0
         WHERE p.deleted = 0 AND p.id = #{productId}
         LIMIT 1
@@ -418,7 +440,7 @@
         SELECT
             COUNT(DISTINCT o.id)          AS salesCount,
             IFNULL(SUM(i.count), 0)       AS totalOutCount,
-            GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR '、' LIMIT 3) AS mainCustomerNames,
+            GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR '、') AS mainCustomerNames,
             MAX(CASE WHEN o.camera_id IS NOT NULL THEN 1 ELSE 0 END) AS hasVideoInt
         FROM erp_sale_order o
         INNER JOIN erp_sale_order_items i ON i.order_id = o.id AND i.deleted = 0

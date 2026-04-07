@@ -113,6 +113,16 @@ public class ErpSaleOrderRespVO {
     @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
     private String buyerIdCard;
 
+    // ========== 视频存证 ==========
+    @Schema(description = "监控摄像头 ID（Seetong 设备/通道 ID）", example = "camera-001")
+    private String cameraId;
+
+    @Schema(description = "视频关联时间（默认取下单时间）")
+    private LocalDateTime videoTime;
+
+    @Schema(description = "视频存证地址（VideoStorageService 异步写入）")
+    private String videoUrl;
+
     // ========== 财务与统计 ==========
     @Schema(description = "收银员编号", example = "1")
     private Long cashierId;
@@ -167,15 +177,19 @@ public class ErpSaleOrderRespVO {
 
         // ========== 关联字段 ==========
 
-        @Schema(description = "产品名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "巧克力")
+        @Schema(description = “产品名称”, requiredMode = Schema.RequiredMode.REQUIRED, example = “巧克力”)
         private String productName;
-        @Schema(description = "产品条码", requiredMode = Schema.RequiredMode.REQUIRED, example = "A9985")
+        @Schema(description = “产品条码”, requiredMode = Schema.RequiredMode.REQUIRED, example = “A9985”)
         private String productBarCode;
-        @Schema(description = "产品单位名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "盒")
+        @Schema(description = “产品单位名称”, requiredMode = Schema.RequiredMode.REQUIRED, example = “盒”)
         private String productUnitName;
+        @Schema(description = “产品规格”, example = “500ml”)
+        private String productStandard;
+        @Schema(description = “农药登记证号”, example = “PD20150001”)
+        private String registrationNo;
 
-        @Schema(description = "库存数量", requiredMode = Schema.RequiredMode.REQUIRED, example = "100.00")
-        private BigDecimal stockCount; // 该字段仅仅在“详情”和“编辑”时使用
+        @Schema(description = “库存数量”, requiredMode = Schema.RequiredMode.REQUIRED, example = “100.00”)
+        private BigDecimal stockCount; // 该字段仅仅在”详情”和”编辑”时使用
 
     }
 

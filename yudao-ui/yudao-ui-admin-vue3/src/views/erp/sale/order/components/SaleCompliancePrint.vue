@@ -76,7 +76,7 @@
               <td>{{ item.productStandard || '--' }}</td>
               <td>{{ item.batchNo }}</td>
               <td>{{ item.registrationNo || '--' }}</td>
-              <td>{{ item.count }} {{ item.unitName }}</td>
+              <td>{{ item.count }} {{ item.productUnitName }}</td>
               <td>¥{{ erpPriceInputFormatter(item.totalPrice) }}</td>
             </tr>
           </tbody>

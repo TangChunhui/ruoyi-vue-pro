@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,6 +53,8 @@ public class ErpSaleOrderSaveReqVO {
     private String dosageAdvice;
 
     @Schema(description = "购买人身份证（高毒农药必填）", example = "350102199001010011")
+    @Pattern(regexp = "^$|^[1-9]\\d{5}(18|19|20)\\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])\\d{3}[\\dX]$",
+            message = "身份证号格式不正确")
     private String buyerIdCard;
 
     // ========== 视频存证 ==========

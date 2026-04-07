@@ -35,6 +35,7 @@ export interface SaleOrderVO {
   dosageAdvice: string // 建议用量
   buyerIdCard: string // 购买人身份证（高毒限用必填）
   cameraId: string // 监控设备 ID
+  videoTime: number // 视频关联时间
   videoUrl: string // 监控回放视频地址
   items: SaleOrderItemVO[] // 订单清单列表
 }

@@ -104,13 +104,18 @@ public class ErpSaleOrderController {
         List<ErpSaleOrderItemDO> saleOrderItemList = saleOrderService.getSaleOrderItemListByOrderId(id);
         Map<Long, ErpProductRespVO> productMap = productService.getProductVOMap(
                 convertSet(saleOrderItemList, ErpSaleOrderItemDO::getProductId));
-        return success(BeanUtils.toBean(saleOrder, ErpSaleOrderRespVO.class, saleOrderVO ->
-                saleOrderVO.setItems(BeanUtils.toBean(saleOrderItemList, ErpSaleOrderRespVO.Item.class, item -> {
-                    BigDecimal stockCount = stockService.getStockCount(item.getProductId());
-                    item.setStockCount(stockCount != null ? stockCount : BigDecimal.ZERO);
-                    MapUtils.findAndThen(productMap, item.getProductId(), product -> item.setProductName(product.getName())
-                            .setProductBarCode(product.getBarCode()).setProductUnitName(product.getUnitName()));
-                }))));
+        Map<Long, ErpCustomerDO> customerMap = customerService.getCustomerMap(
+                convertSet(List.of(saleOrder), ErpSaleOrderDO::getCustomerId));
+        return success(BeanUtils.toBean(saleOrder, ErpSaleOrderRespVO.class, saleOrderVO -> {
+            saleOrderVO.setItems(BeanUtils.toBean(saleOrderItemList, ErpSaleOrderRespVO.Item.class, item -> {
+                BigDecimal stockCount = stockService.getStockCount(item.getProductId());
+                item.setStockCount(stockCount != null ? stockCount : BigDecimal.ZERO);
+                MapUtils.findAndThen(productMap, item.getProductId(), product -> item.setProductName(product.getName())
+                        .setProductBarCode(product.getBarCode()).setProductUnitName(product.getUnitName())
+                        .setProductStandard(product.getStandard()).setRegistrationNo(product.getRegistrationNo()));
+            }));
+            MapUtils.findAndThen(customerMap, saleOrderVO.getCustomerId(), customer -> saleOrderVO.setCustomerName(customer.getName()));
+        }));
     }
 
     @GetMapping("/page")
@@ -154,7 +159,8 @@ public class ErpSaleOrderController {
         return BeanUtils.toBean(pageResult, ErpSaleOrderRespVO.class, saleOrder -> {
             saleOrder.setItems(BeanUtils.toBean(saleOrderItemMap.get(saleOrder.getId()), ErpSaleOrderRespVO.Item.class,
                     item -> MapUtils.findAndThen(productMap, item.getProductId(), product -> item.setProductName(product.getName())
-                            .setProductBarCode(product.getBarCode()).setProductUnitName(product.getUnitName()))));
+                            .setProductBarCode(product.getBarCode()).setProductUnitName(product.getUnitName())
+                            .setProductStandard(product.getStandard()).setRegistrationNo(product.getRegistrationNo()))));
             saleOrder.setProductNames(CollUtil.join(saleOrder.getItems(), "，", ErpSaleOrderRespVO.Item::getProductName));
             MapUtils.findAndThen(customerMap, saleOrder.getCustomerId(), supplier -> saleOrder.setCustomerName(supplier.getName()));
             MapUtils.findAndThen(userMap, Long.parseLong(saleOrder.getCreator()), user -> saleOrder.setCreatorName(user.getNickname()));
