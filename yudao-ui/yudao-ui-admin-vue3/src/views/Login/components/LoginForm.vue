@@ -237,7 +237,7 @@ const getLoginFormCache = () => {
 // 根据域名，获得租户信息
 const getTenantByWebsite = async () => {
   if (loginData.tenantEnable === 'true') {
-    const website = location.host
+    const website = location.hostname
     const res = await LoginApi.getTenantByWebsite(website)
     if (res) {
       loginData.loginForm.tenantName = res.name

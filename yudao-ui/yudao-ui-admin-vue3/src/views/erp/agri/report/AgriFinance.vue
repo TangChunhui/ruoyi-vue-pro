@@ -161,7 +161,7 @@
                 :class="item.date === todayStr ? 'bg-blue-500' : 'bg-blue-200'"
                 :style="{ height: getBarHeight(item.revenue) + 'px' }"
                 :title="`${item.date}: ¥${item.revenue} (${item.count}笔)`"
-              />
+              ></div>
               <span
                 class="text-10px mt-4px"
                 :class="item.date === todayStr ? 'text-blue-600 font-bold' : 'text-gray-400'"

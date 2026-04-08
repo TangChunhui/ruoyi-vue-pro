@@ -350,50 +350,51 @@ const getShortcut = async () => {
   shortcut = Object.assign(shortcut, data)
 }
 
-// 用户来源
+// 农田病虫害大类预测热力图 (原：用户来源)
 const getUserAccessSource = async () => {
   const data = [
-    { value: 335, name: 'analysis.directAccess' },
-    { value: 310, name: 'analysis.mailMarketing' },
-    { value: 234, name: 'analysis.allianceAdvertising' },
-    { value: 135, name: 'analysis.videoAdvertising' },
-    { value: 1548, name: 'analysis.searchEngines' }
+    { value: 335, name: '水稻稻飞虱/钻心虫' },
+    { value: 310, name: '小麦赤霉病/蚜虫' },
+    { value: 234, name: '玉米草地贪夜蛾' },
+    { value: 135, name: '果树红蜘蛛/斑点落叶病' },
+    { value: 1548, name: '各区杂草防除 (除草剂旺季)' }
   ]
   set(
     pieOptionsData,
     'legend.data',
-    data.map((v) => t(v.name))
+    data.map((v) => v.name)
   )
   pieOptionsData!.series![0].data = data.map((v) => {
     return {
-      name: t(v.name),
+      name: v.name,
       value: v.value
     }
   })
 }
 const barOptionsData = reactive<EChartsOption>(barOptions) as EChartsOption
 
-// 周活跃量
+// 农资旺季指数走势统计 (原：周活跃量)
 const getWeeklyUserActivity = async () => {
   const data = [
-    { value: 13253, name: 'analysis.monday' },
-    { value: 34235, name: 'analysis.tuesday' },
-    { value: 26321, name: 'analysis.wednesday' },
-    { value: 12340, name: 'analysis.thursday' },
-    { value: 24643, name: 'analysis.friday' },
-    { value: 1322, name: 'analysis.saturday' },
-    { value: 1324, name: 'analysis.sunday' }
+    { value: 13253, name: '第1周(备耕)' },
+    { value: 34235, name: '第2周(底肥)' },
+    { value: 26321, name: '第3周(清园)' },
+    { value: 42340, name: '第4周(芽前封草)' },
+    { value: 54643, name: '第5周(杀虫高峰)' },
+    { value: 31322, name: '第6周(追肥)' },
+    { value: 14324, name: '第7周(促长控旺)' }
   ]
   set(
     barOptionsData,
     'xAxis.data',
-    data.map((v) => t(v.name))
+    data.map((v) => v.name)
   )
   set(barOptionsData, 'series', [
     {
-      name: t('analysis.activeQuantity'),
+      name: '本周区域农资消耗指数',
       data: data.map((v) => v.value),
-      type: 'bar'
+      type: 'bar',
+      itemStyle: { color: '#018d71' }
     }
   ])
 }

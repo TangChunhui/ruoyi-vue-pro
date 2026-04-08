@@ -168,4 +168,23 @@ public class ProductSpuDO extends BaseDO {
      * 浏览量
      */
     private Integer browseCount;
+
+    // ========== 农资专属字段 (Agri-Mall) =========
+
+    /**
+     * 农资类型：1-农药 2-种子 3-化肥 4-农机
+     */
+    private Integer agriType;
+
+    /**
+     * 是否限用农药 (高毒管控)
+     */
+    private Boolean isRestricted;
+
+    /**
+     * 农资特有属性扩展集合 (JSON格式)
+     * R01: 包含登记证号、有效成分、毒性、适用作物等属性映射
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private java.util.Map<String, Object> agriProperty;
 }

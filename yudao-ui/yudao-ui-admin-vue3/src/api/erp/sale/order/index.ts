@@ -86,5 +86,10 @@ export const SaleOrderApi = {
   // 导出销售订单 Excel
   exportSaleOrder: async (params: any) => {
     return await request.download({ url: `/erp/sale-order/export-excel`, params })
+  },
+
+  // 导出农业部监管合规台账 (限购农药等) Excel (R35)
+  exportAgriLedgerExcel: async (params: any) => {
+    return await request.download({ url: `/erp/sale-order/export-agri-ledger-excel`, params })
   }
 }

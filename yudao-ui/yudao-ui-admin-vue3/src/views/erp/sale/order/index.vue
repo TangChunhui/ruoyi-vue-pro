@@ -144,7 +144,16 @@
           :loading="exportLoading"
           v-hasPermi="['erp:sale-order:export']"
         >
-          <Icon icon="ep:download" class="mr-5px" /> 导出
+          <Icon icon="ep:download" class="mr-5px" /> 导出全部
+        </el-button>
+        <el-button
+          type="warning"
+          plain
+          @click="handleAgriExport"
+          :loading="exportLoading"
+          v-hasPermi="['erp:sale-order:export']"
+        >
+          <Icon icon="ep:download" class="mr-5px" /> 导出【农委监管台账】
         </el-button>
         <el-button
           type="danger"
@@ -440,7 +449,7 @@ const handleUpdateStatus = async (id: number, status: number) => {
   } catch {}
 }
 
-/** 导出按钮操作 */
+/** 导出全部订单按钮操作 */
 const handleExport = async () => {
   try {
     // 导出的二次确认
@@ -449,6 +458,19 @@ const handleExport = async () => {
     exportLoading.value = true
     const data = await SaleOrderApi.exportSaleOrder(queryParams)
     download.excel(data, '销售订单.xls')
+  } catch {
+  } finally {
+    exportLoading.value = false
+  }
+}
+
+/** 导出农资电子台账 (R35) */
+const handleAgriExport = async () => {
+  try {
+    await message.exportConfirm('确认导出《农业农村部农药等限用物资流向台账》？')
+    exportLoading.value = true
+    const data = await SaleOrderApi.exportAgriLedgerExcel(queryParams)
+    download.excel(data, '农资销售监管台账(备查).xls')
   } catch {
   } finally {
     exportLoading.value = false
