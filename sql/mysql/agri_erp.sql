@@ -129,7 +129,7 @@ INSERT INTO `system_menu`(
 SET @AGRI_PARENT_ID = LAST_INSERT_ID();
 
 -- 4. 强力挂载子功能 (使用绝对路径避免前端解析歧义)
-DELETE FROM `system_menu` WHERE `name` IN ('经营合规驾驶舱', '农资收银台', '农户管理', '农资采购入库', '农资销售出库', '农资库存查询', '农资综合台账', '限用农药台账', '当日销售明细', '农资财务汇总', '供应商管理', '农资商品管理') AND `parent_id` > 0;
+DELETE FROM `system_menu` WHERE `name` IN ('经营合规驾驶舱', '农资收银台', '农户管理', '农资采购入库', '农资销售出库', '农资库存查询', '农资综合台账', '限用农药台账', '当日销售明细', '农资财务汇总', '供应商管理', '农资商品管理', '库存收发余额', '农业服务订单', '农户农田管理', '农事作业记录') AND `parent_id` > 0;
 
 INSERT INTO `system_menu` (
     `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `icon`, `create_time`, `update_time`, `creator`, `updater`, `deleted`
@@ -145,7 +145,11 @@ INSERT INTO `system_menu` (
 ('当日销售明细', 'erp:agri-report:query', 2, 8, @AGRI_PARENT_ID, 'sales-detail', 'erp/agri/report/SalesDetail', 'SalesDetail', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
 ('农资财务汇总', 'erp:agri-report:query', 2, 9, @AGRI_PARENT_ID, 'agri-finance', 'erp/agri/report/AgriFinance', 'AgriFinance', 0, 1, 1, 0, 'ep:money', NOW(), NOW(), '1', '1', 0),
 ('供应商管理', 'erp:supplier:query', 2, 10, @AGRI_PARENT_ID, 'supplier', 'erp/purchase/supplier/index', 'ErpSupplier', 0, 1, 1, 0, 'ep:office-building', NOW(), NOW(), '1', '1', 0),
-('农资商品管理', 'erp:product:query', 2, 11, @AGRI_PARENT_ID, 'product', 'erp/product/product/index', 'ErpProduct', 0, 1, 1, 0, 'ep:goods', NOW(), NOW(), '1', '1', 0);
+('农资商品管理', 'erp:product:query', 2, 11, @AGRI_PARENT_ID, 'product', 'erp/product/product/index', 'ErpProduct', 0, 1, 1, 0, 'ep:goods', NOW(), NOW(), '1', '1', 0),
+('库存收发余额', 'erp:agri-report:query', 2, 12, @AGRI_PARENT_ID, 'stock-balance', 'erp/agri/report/StockBalance', 'AgriStockBalanceReport', 0, 1, 1, 0, 'ep:data-analysis', NOW(), NOW(), '1', '1', 0),
+('农业服务订单', 'erp:agri-service-order:query', 2, 13, @AGRI_PARENT_ID, 'service-order', 'erp/agri/serviceOrder/index', 'AgriServiceOrder', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
+('农户农田管理', 'erp:agri-field:query', 2, 14, @AGRI_PARENT_ID, 'field', 'erp/agri/field/index', 'AgriField', 0, 1, 1, 0, 'ep:place', NOW(), NOW(), '1', '1', 0),
+('农事作业记录', 'erp:agri-field:query', 2, 15, @AGRI_PARENT_ID, 'field-record', 'erp/agri/fieldRecord/index', 'AgriFieldRecord', 0, 1, 1, 0, 'ep:calendar', NOW(), NOW(), '1', '1', 0);
 
 -- ----------------------------
 -- 5. 菜单精简模式 (夫妻店专享)
