@@ -110,6 +110,70 @@ CALL AddColSafe('erp_finance_receipt', 'record_video_url', 'VARCHAR(1000) NULL C
 CALL AddColSafe('erp_finance_payment', 'record_video_url', 'VARCHAR(1000) NULL COMMENT \'记账现场视频存证 URL\' AFTER `remark`');
 
 -- ----------------------------
+-- 新增农业服务表 (DDL) - 幂等创建
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `erp_agri_field` (
+    `id`           bigint       NOT NULL AUTO_INCREMENT COMMENT '编号',
+    `member_id`    bigint       NOT NULL COMMENT '所属用户编号',
+    `name`         varchar(100) NOT NULL COMMENT '农田名称',
+    `area`         decimal(10, 2)        DEFAULT NULL COMMENT '面积（亩）',
+    `location`     varchar(200)          DEFAULT NULL COMMENT '位置描述',
+    `crop`         varchar(100)          DEFAULT NULL COMMENT '当前种植作物',
+    `soil_type`    varchar(100)          DEFAULT NULL COMMENT '土壤类型',
+    `sow_date`     datetime              DEFAULT NULL COMMENT '播种日期',
+    `growth_stage` varchar(100)          DEFAULT NULL COMMENT '生长阶段',
+    `remark`       varchar(500)          DEFAULT NULL COMMENT '备注',
+    `creator`      varchar(64)           DEFAULT '' COMMENT '创建者',
+    `create_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updater`      varchar(64)           DEFAULT '' COMMENT '更新者',
+    `update_time`  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted`      bit(1)       NOT NULL DEFAULT b'0' COMMENT '是否删除',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1 COMMENT ='农田档案';
+
+CREATE TABLE IF NOT EXISTS `erp_agri_field_record` (
+    `id`           bigint      NOT NULL AUTO_INCREMENT COMMENT '编号',
+    `field_id`     bigint      NOT NULL COMMENT '所属农田编号',
+    `member_id`    bigint      NOT NULL COMMENT '用户编号',
+    `type`         varchar(50) NOT NULL COMMENT '农事类型（施肥/打药/灌溉）',
+    `product`      varchar(100)         DEFAULT NULL COMMENT '使用产品名称',
+    `dosage`       varchar(100)         DEFAULT NULL COMMENT '用量',
+    `operate_date` datetime             DEFAULT NULL COMMENT '作业日期',
+    `remark`       varchar(500)         DEFAULT NULL COMMENT '备注',
+    `creator`      varchar(64)          DEFAULT '' COMMENT '创建者',
+    `create_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updater`      varchar(64)          DEFAULT '' COMMENT '更新者',
+    `update_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted`      bit(1)      NOT NULL DEFAULT b'0' COMMENT '是否删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_field_id` (`field_id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1 COMMENT ='农事作业记录';
+
+CREATE TABLE IF NOT EXISTS `erp_agri_service_order` (
+    `id`           bigint      NOT NULL AUTO_INCREMENT COMMENT '编号',
+    `member_id`    bigint      NOT NULL COMMENT '用户编号',
+    `service_type` varchar(50) NOT NULL COMMENT '服务类型（drone_spray/drone_sow/drying）',
+    `status`       tinyint     NOT NULL DEFAULT 0 COMMENT '状态（0待处理 1已派单 2已完成）',
+    `field_id`     bigint               DEFAULT NULL COMMENT '关联农田编号',
+    `service_area` decimal(10, 2)       DEFAULT NULL COMMENT '服务面积/量',
+    `expect_date`  datetime             DEFAULT NULL COMMENT '期望服务日期',
+    `contact_name`   varchar(50)        DEFAULT NULL COMMENT '联系人姓名',
+    `contact_mobile` varchar(20)        DEFAULT NULL COMMENT '联系电话',
+    `address`      varchar(200)         DEFAULT NULL COMMENT '服务地址',
+    `price`        decimal(10, 2)       DEFAULT NULL COMMENT '核定价格',
+    `remark`       varchar(500)         DEFAULT NULL COMMENT '备注',
+    `creator`      varchar(64)          DEFAULT '' COMMENT '创建者',
+    `create_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updater`      varchar(64)          DEFAULT '' COMMENT '更新者',
+    `update_time`  datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted`      bit(1)      NOT NULL DEFAULT b'0' COMMENT '是否删除',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1 COMMENT ='农业服务订单';
+
+-- ----------------------------
 -- 5. 菜单修改 (DML)
 -- ----------------------------
 -- 1. 获取菜单挂载点
@@ -141,8 +205,8 @@ INSERT INTO `system_menu` (
 ('农资销售出库', 'erp:sale-out:query', 2, 4, @AGRI_PARENT_ID, 'sale-out', 'erp/sale/out/index', 'ErpSaleOut', 0, 1, 1, 0, 'ep:upload', NOW(), NOW(), '1', '1', 0),
 ('农资库存查询', 'erp:stock:query', 2, 5, @AGRI_PARENT_ID, 'stock-stock', 'erp/stock/stock/index', 'ErpStock', 0, 1, 1, 0, 'ep:box', NOW(), NOW(), '1', '1', 0),
 ('农资综合台账', 'erp:agri-report:query', 2, 6, @AGRI_PARENT_ID, 'ledger', 'erp/agri/ledger/index', 'AgriLedger', 0, 1, 1, 0, 'ep:notebook', NOW(), NOW(), '1', '1', 0),
-('限用农药台账', 'erp:agri-report:query', 2, 7, @AGRI_PARENT_ID, 'restricted-sale-ledger', 'erp/agri/report/RestrictedSale', 'RestrictedSale', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
-('当日销售明细', 'erp:agri-report:query', 2, 8, @AGRI_PARENT_ID, 'sales-detail', 'erp/agri/report/SalesDetail', 'SalesDetail', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
+('限用农药台账', 'erp:agri-report:query', 2, 7, @AGRI_PARENT_ID, 'restricted-sale-ledger', 'erp/agri/report/RestrictedSale', 'RestrictedSaleReport', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
+('当日销售明细', 'erp:agri-report:query', 2, 8, @AGRI_PARENT_ID, 'sales-detail', 'erp/agri/report/SalesDetail', 'AgriSalesDetail', 0, 1, 1, 0, 'ep:list', NOW(), NOW(), '1', '1', 0),
 ('农资财务汇总', 'erp:agri-report:query', 2, 9, @AGRI_PARENT_ID, 'agri-finance', 'erp/agri/report/AgriFinance', 'AgriFinance', 0, 1, 1, 0, 'ep:money', NOW(), NOW(), '1', '1', 0),
 ('供应商管理', 'erp:supplier:query', 2, 10, @AGRI_PARENT_ID, 'supplier', 'erp/purchase/supplier/index', 'ErpSupplier', 0, 1, 1, 0, 'ep:office-building', NOW(), NOW(), '1', '1', 0),
 ('农资商品管理', 'erp:product:query', 2, 11, @AGRI_PARENT_ID, 'product', 'erp/product/product/index', 'ErpProduct', 0, 1, 1, 0, 'ep:goods', NOW(), NOW(), '1', '1', 0),
